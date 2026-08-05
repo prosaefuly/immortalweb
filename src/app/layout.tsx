@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Immortal Division | Portal Musik & Pop-Culture Modern",
-  description: "Immortal Division adalah portal media independen yang mengonsolidasikan program YouTube, rilis lagu, galeri seni digital, berita musik urban, dan komunitas member.",
+  title: "Immortal Division",
+  description: "Immortal Division adalah sebuah wadah yang akan membahas, musik seni budaya dan olahraga-olahraga extreme yang ada di seluruh jagat raya.",
 };
 
 export default function RootLayout({
