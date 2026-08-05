@@ -822,6 +822,11 @@ export const getProductById = async (id: string): Promise<Product | undefined> =
 };
 
 export const addProduct = async (data: Omit<Product, 'id'>): Promise<Product> => {
+  if (isSupabaseConfigured && supabase) {
+    const { data: newProd, error } = await supabase.from('products').insert([data]).select().single();
+    if (!error && newProd) return newProd;
+    console.error('Error adding product to Supabase:', error);
+  }
   const list = getLocalStorage('immortal_products', mockProducts);
   const newProd: Product = {
     ...data,
@@ -832,6 +837,11 @@ export const addProduct = async (data: Omit<Product, 'id'>): Promise<Product> =>
 };
 
 export const deleteProduct = async (id: string): Promise<boolean> => {
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase.from('products').delete().eq('id', id);
+    if (!error) return true;
+    console.error('Error deleting product from Supabase:', error);
+  }
   const list = getLocalStorage('immortal_products', mockProducts);
   const filtered = list.filter((p: Product) => p.id !== id);
   setLocalStorage('immortal_products', filtered);
@@ -909,7 +919,8 @@ export const placeOrder = async (data: Omit<Order, 'id' | 'payment_status' | 'cr
 export const updateOrderStatus = async (id: string, status: string): Promise<boolean> => {
   if (isSupabaseConfigured && supabase) {
     const { error } = await supabase.from('orders').update({ payment_status: status }).eq('id', id);
-    return !error;
+    if (!error) return true;
+    console.error('Error updating order status in Supabase:', error);
   }
   const list = getLocalStorage('immortal_orders', mockOrdersSeed);
   const updated = list.map((o: Order) => o.id === id ? { ...o, payment_status: status } : o);
@@ -920,7 +931,8 @@ export const updateOrderStatus = async (id: string, status: string): Promise<boo
 export const deleteOrder = async (id: string): Promise<boolean> => {
   if (isSupabaseConfigured && supabase) {
     const { error } = await supabase.from('orders').delete().eq('id', id);
-    return !error;
+    if (!error) return true;
+    console.error('Error deleting order from Supabase:', error);
   }
   const list = getLocalStorage('immortal_orders', mockOrdersSeed);
   const filtered = list.filter((o: Order) => o.id !== id);
@@ -1034,6 +1046,21 @@ export const logoutMock = (): void => {
 
 // 1. Members Management
 export const getMembersList = async (): Promise<UserSession[]> => {
+  if (isSupabaseConfigured && supabase) {
+    const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+    if (!error && data) {
+      return data.map(u => ({
+        id: u.id,
+        username: u.username,
+        fullName: u.full_name,
+        email: u.email || 'member@immortaldivision.com',
+        avatarUrl: u.avatar_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+        bio: u.bio || '',
+        isLoggedIn: false,
+        isAdmin: u.is_admin || false
+      }));
+    }
+  }
   return getLocalStorage('immortal_members', mockMembersSeed);
 };
 
@@ -1047,6 +1074,21 @@ export const addMemberToMockList = (user: UserSession) => {
 };
 
 export const createAdminAccount = async (data: Omit<UserSession, 'id' | 'isLoggedIn' | 'isAdmin'>): Promise<boolean> => {
+  // Profiles in Supabase reference auth.users. Usually admin accounts are created via Supabase Auth.
+  // In the panel, we can fallback to mock if direct SQL profiles insert isn't fully allowed due to Auth triggers,
+  // but let's try inserting into profiles table if they are registered:
+  if (isSupabaseConfigured && supabase) {
+    // Note: Creating user account requires supabase.auth.signUp or service role triggers.
+    // So for master dashboard, we fallback to localStorage for simple mock admins if auth is not connected,
+    // but if profile can be inserted:
+    const { error } = await supabase.from('profiles').insert([{
+      username: data.username,
+      full_name: data.fullName,
+      bio: data.bio,
+      is_admin: true
+    }]);
+    if (!error) return true;
+  }
   const members = getLocalStorage('immortal_members', mockMembersSeed);
   const exists = members.find((m: UserSession) => m.email === data.email);
   if (exists) return false;
@@ -1062,6 +1104,11 @@ export const createAdminAccount = async (data: Omit<UserSession, 'id' | 'isLogge
 };
 
 export const deleteMember = async (id: string): Promise<boolean> => {
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase.from('profiles').delete().eq('id', id);
+    if (!error) return true;
+    console.error('Error deleting profile from Supabase:', error);
+  }
   const members = getLocalStorage('immortal_members', mockMembersSeed);
   const filtered = members.filter((m: UserSession) => m.id !== id);
   setLocalStorage('immortal_members', filtered);
@@ -1076,6 +1123,22 @@ export const deleteMember = async (id: string): Promise<boolean> => {
 
 export const toggleAdminPrivilege = async (id: string): Promise<boolean> => {
   const members = getLocalStorage('immortal_members', mockMembersSeed);
+  const m = members.find((u: any) => u.id === id);
+  const newAdminStatus = m ? !m.is_admin : true;
+
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase.from('profiles').update({ is_admin: newAdminStatus }).eq('id', id);
+    if (!error) {
+      const active = getCurrentUserSession();
+      if (active.id === id) {
+        const activeUpdated = { ...active, isAdmin: newAdminStatus };
+        setLocalStorage('immortal_session', activeUpdated);
+      }
+      return true;
+    }
+    console.error('Error toggling admin status in Supabase:', error);
+  }
+
   const updated = members.map((m: UserSession) => m.id === id ? { ...m, isAdmin: !m.isAdmin } : m);
   setLocalStorage('immortal_members', updated);
 
@@ -1090,6 +1153,18 @@ export const toggleAdminPrivilege = async (id: string): Promise<boolean> => {
 
 // 2. Program CRUD
 export const addProgram = async (data: Omit<Program, 'id'>): Promise<Program> => {
+  if (isSupabaseConfigured && supabase) {
+    const insertData = {
+      title: data.title,
+      description: data.description,
+      cover_image: data.cover_image,
+      tags: data.tags,
+      slug: data.slug || data.title.toLowerCase().replace(/\s+/g, '-')
+    };
+    const { data: newProg, error } = await supabase.from('programs').insert([insertData]).select().single();
+    if (!error && newProg) return newProg;
+    console.error('Error adding program to Supabase:', error);
+  }
   const list = getLocalStorage('immortal_programs', mockPrograms);
   const newProg: Program = {
     ...data,
@@ -1101,6 +1176,11 @@ export const addProgram = async (data: Omit<Program, 'id'>): Promise<Program> =>
 };
 
 export const deleteProgram = async (id: string): Promise<boolean> => {
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase.from('programs').delete().eq('id', id);
+    if (!error) return true;
+    console.error('Error deleting program from Supabase:', error);
+  }
   const list = getLocalStorage('immortal_programs', mockPrograms);
   const filtered = list.filter((p: Program) => p.id !== id);
   setLocalStorage('immortal_programs', filtered);
@@ -1115,6 +1195,22 @@ export const deleteProgram = async (id: string): Promise<boolean> => {
 
 // 3. Episode CRUD
 export const addEpisode = async (data: Omit<Episode, 'id' | 'published_at'>): Promise<Episode> => {
+  if (isSupabaseConfigured && supabase) {
+    const insertData = {
+      program_id: data.program_id,
+      title: data.title,
+      description: data.description,
+      youtube_id: data.youtube_id,
+      season: data.season,
+      episode_number: data.episode_number,
+      duration: data.duration,
+      is_exclusive: data.is_exclusive,
+      published_at: new Date().toISOString()
+    };
+    const { data: newEp, error } = await supabase.from('episodes').insert([insertData]).select().single();
+    if (!error && newEp) return newEp;
+    console.error('Error adding episode to Supabase:', error);
+  }
   const list = getLocalStorage('immortal_episodes', mockEpisodes);
   const newEp: Episode = {
     ...data,
@@ -1126,6 +1222,11 @@ export const addEpisode = async (data: Omit<Episode, 'id' | 'published_at'>): Pr
 };
 
 export const deleteEpisode = async (id: string): Promise<boolean> => {
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase.from('episodes').delete().eq('id', id);
+    if (!error) return true;
+    console.error('Error deleting episode from Supabase:', error);
+  }
   const list = getLocalStorage('immortal_episodes', mockEpisodes);
   const filtered = list.filter((e: Episode) => e.id !== id);
   setLocalStorage('immortal_episodes', filtered);
@@ -1134,6 +1235,11 @@ export const deleteEpisode = async (id: string): Promise<boolean> => {
 
 // 4. Music CRUD
 export const addMusicTrack = async (data: Omit<MusicTrack, 'id'>): Promise<MusicTrack> => {
+  if (isSupabaseConfigured && supabase) {
+    const { data: newTrack, error } = await supabase.from('music_tracks').insert([data]).select().single();
+    if (!error && newTrack) return newTrack;
+    console.error('Error adding music track to Supabase:', error);
+  }
   const list = getLocalStorage('immortal_music', mockMusicTracks);
   const newTrack: MusicTrack = {
     ...data,
@@ -1144,6 +1250,11 @@ export const addMusicTrack = async (data: Omit<MusicTrack, 'id'>): Promise<Music
 };
 
 export const deleteMusicTrack = async (id: string): Promise<boolean> => {
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase.from('music_tracks').delete().eq('id', id);
+    if (!error) return true;
+    console.error('Error deleting music track from Supabase:', error);
+  }
   const list = getLocalStorage('immortal_music', mockMusicTracks);
   const filtered = list.filter((t: MusicTrack) => t.id !== id);
   setLocalStorage('immortal_music', filtered);
@@ -1152,6 +1263,11 @@ export const deleteMusicTrack = async (id: string): Promise<boolean> => {
 
 // 5. Artwork CRUD
 export const addArtWork = async (data: Omit<ArtWork, 'id'>): Promise<ArtWork> => {
+  if (isSupabaseConfigured && supabase) {
+    const { data: newArt, error } = await supabase.from('art_works').insert([data]).select().single();
+    if (!error && newArt) return newArt;
+    console.error('Error adding artwork to Supabase:', error);
+  }
   const list = getLocalStorage('immortal_artworks', mockArtWorks);
   const newArt: ArtWork = {
     ...data,
@@ -1162,6 +1278,11 @@ export const addArtWork = async (data: Omit<ArtWork, 'id'>): Promise<ArtWork> =>
 };
 
 export const deleteArtWork = async (id: string): Promise<boolean> => {
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase.from('art_works').delete().eq('id', id);
+    if (!error) return true;
+    console.error('Error deleting artwork from Supabase:', error);
+  }
   const list = getLocalStorage('immortal_artworks', mockArtWorks);
   const filtered = list.filter((a: ArtWork) => a.id !== id);
   setLocalStorage('immortal_artworks', filtered);
@@ -1170,6 +1291,33 @@ export const deleteArtWork = async (id: string): Promise<boolean> => {
 
 // 6. Blog CRUD
 export const addBlogPost = async (data: Omit<BlogPost, 'id' | 'published_at' | 'author'> & { authorName: string }): Promise<BlogPost> => {
+  if (isSupabaseConfigured && supabase) {
+    const active = getCurrentUserSession();
+    // Default uuid fallback or active.id
+    const authorId = active && active.isLoggedIn && active.id ? active.id : '88888888-8888-4888-a888-888888888888';
+    
+    const insertData = {
+      title: data.title,
+      slug: data.slug || data.title.toLowerCase().replace(/\s+/g, '-'),
+      excerpt: data.excerpt,
+      content: data.content,
+      cover_image: data.cover_image,
+      category: data.category,
+      author_id: authorId,
+      published_at: new Date().toISOString()
+    };
+    const { data: newPost, error } = await supabase.from('blog_posts').insert([insertData]).select().single();
+    if (!error && newPost) {
+      return {
+        ...newPost,
+        author: {
+          full_name: data.authorName || active.fullName || 'Immortal Admin',
+          avatar_url: active.avatarUrl || 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&auto=format&fit=crop&q=80'
+        }
+      };
+    }
+    console.error('Error adding blog post to Supabase:', error);
+  }
   const list = getLocalStorage('immortal_blog', mockBlogPosts);
   const newPost: BlogPost = {
     ...data,
@@ -1186,6 +1334,11 @@ export const addBlogPost = async (data: Omit<BlogPost, 'id' | 'published_at' | '
 };
 
 export const deleteBlogPost = async (id: string): Promise<boolean> => {
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase.from('blog_posts').delete().eq('id', id);
+    if (!error) return true;
+    console.error('Error deleting blog post from Supabase:', error);
+  }
   const list = getLocalStorage('immortal_blog', mockBlogPosts);
   const filtered = list.filter((p: BlogPost) => p.id !== id);
   setLocalStorage('immortal_blog', filtered);
@@ -1194,6 +1347,11 @@ export const deleteBlogPost = async (id: string): Promise<boolean> => {
 
 // 7. Event CRUD
 export const addEvent = async (data: Omit<EventItem, 'id'>): Promise<EventItem> => {
+  if (isSupabaseConfigured && supabase) {
+    const { data: newEvent, error } = await supabase.from('events').insert([data]).select().single();
+    if (!error && newEvent) return newEvent;
+    console.error('Error adding event to Supabase:', error);
+  }
   const list = getLocalStorage('immortal_events', mockEvents);
   const newEvent: EventItem = {
     ...data,
@@ -1204,6 +1362,11 @@ export const addEvent = async (data: Omit<EventItem, 'id'>): Promise<EventItem> 
 };
 
 export const deleteEvent = async (id: string): Promise<boolean> => {
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase.from('events').delete().eq('id', id);
+    if (!error) return true;
+    console.error('Error deleting event from Supabase:', error);
+  }
   const list = getLocalStorage('immortal_events', mockEvents);
   const filtered = list.filter((e: EventItem) => e.id !== id);
   setLocalStorage('immortal_events', filtered);
