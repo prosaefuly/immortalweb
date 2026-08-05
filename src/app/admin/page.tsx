@@ -15,7 +15,7 @@ import {
 } from '@/lib/db';
 import { 
   LayoutDashboard, Tv, Music, Image as ImageIcon, Newspaper, Calendar, Mail, Users, 
-  Plus, Trash2, Shield, Eye, ShieldAlert, LogOut, CheckCircle2, UserPlus, FileText,
+  Plus, Trash2, Edit, Shield, Eye, ShieldAlert, LogOut, CheckCircle2, UserPlus, FileText,
   ShoppingBag, ShoppingCart, MessageSquare, Check, DollarSign
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -32,6 +32,14 @@ export default function AdminPage() {
 
   // Active Tab
   const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [editingProgramId, setEditingProgramId] = useState<string | null>(null);
+  const [editingEpisodeId, setEditingEpisodeId] = useState<string | null>(null);
+  const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
+  const [editingArtId, setEditingArtId] = useState<string | null>(null);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [editingBlogPostId, setEditingBlogPostId] = useState<string | null>(null);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
+
 
   // Database lists
   const [programs, setPrograms] = useState<Program[]>([]);
@@ -711,7 +719,7 @@ export default function AdminPage() {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   {/* Form */}
                   <form onSubmit={handleAddProgram} className="rounded-3xl border border-white/5 bg-[#08080a] p-6 space-y-4">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-white/5 pb-2">ADD PROGRAM</h3>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-white/5 pb-2">{editingProgramId ? 'EDIT PROGRAM' : 'ADD PROGRAM'}</h3>
                     
                     <div className="space-y-3">
                       <div>

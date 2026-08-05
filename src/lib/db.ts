@@ -1372,3 +1372,107 @@ export const deleteEvent = async (id: string): Promise<boolean> => {
   setLocalStorage('immortal_events', filtered);
   return true;
 };
+
+// --- UPDATE OPERATIONS (EDIT CRUD) ---
+
+export const updateProgram = async (id: string, data: Partial<Omit<Program, 'id'>>): Promise<boolean> => {
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase.from('programs').update(data).eq('id', id);
+    if (!error) return true;
+    console.error('Error updating program in Supabase:', error);
+  }
+  const list = getLocalStorage('immortal_programs', mockPrograms);
+  const updated = list.map((p: Program) => p.id === id ? { ...p, ...data } : p);
+  setLocalStorage('immortal_programs', updated);
+  return true;
+};
+
+export const updateEpisode = async (id: string, data: Partial<Omit<Episode, 'id' | 'published_at'>>): Promise<boolean> => {
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase.from('episodes').update(data).eq('id', id);
+    if (!error) return true;
+    console.error('Error updating episode in Supabase:', error);
+  }
+  const list = getLocalStorage('immortal_episodes', mockEpisodes);
+  const updated = list.map((e: Episode) => e.id === id ? { ...e, ...data } : e);
+  setLocalStorage('immortal_episodes', updated);
+  return true;
+};
+
+export const updateMusicTrack = async (id: string, data: Partial<Omit<MusicTrack, 'id'>>): Promise<boolean> => {
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase.from('music_tracks').update(data).eq('id', id);
+    if (!error) return true;
+    console.error('Error updating music track in Supabase:', error);
+  }
+  const list = getLocalStorage('immortal_music', mockMusicTracks);
+  const updated = list.map((t: MusicTrack) => t.id === id ? { ...t, ...data } : t);
+  setLocalStorage('immortal_music', updated);
+  return true;
+};
+
+export const updateArtWork = async (id: string, data: Partial<Omit<ArtWork, 'id'>>): Promise<boolean> => {
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase.from('art_works').update(data).eq('id', id);
+    if (!error) return true;
+    console.error('Error updating artwork in Supabase:', error);
+  }
+  const list = getLocalStorage('immortal_artworks', mockArtWorks);
+  const updated = list.map((a: ArtWork) => a.id === id ? { ...a, ...data } : a);
+  setLocalStorage('immortal_artworks', updated);
+  return true;
+};
+
+export const updateBlogPost = async (id: string, data: Partial<Omit<BlogPost, 'id' | 'published_at' | 'author'>> & { authorName?: string }): Promise<boolean> => {
+  if (isSupabaseConfigured && supabase) {
+    const active = getCurrentUserSession();
+    const updateData: any = {
+      title: data.title,
+      slug: data.slug,
+      excerpt: data.excerpt,
+      content: data.content,
+      cover_image: data.cover_image,
+      category: data.category
+    };
+    // Clean undefined fields to avoid overwriting with null
+    Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);
+    
+    const { error } = await supabase.from('blog_posts').update(updateData).eq('id', id);
+    if (!error) return true;
+    console.error('Error updating blog post in Supabase:', error);
+  }
+  const list = getLocalStorage('immortal_blog', mockBlogPosts);
+  const updated = list.map((p: BlogPost) => {
+    if (p.id === id) {
+      const authorInfo = data.authorName ? { ...p.author, full_name: data.authorName } : p.author;
+      return { ...p, ...data, author: authorInfo };
+    }
+    return p;
+  });
+  setLocalStorage('immortal_blog', updated);
+  return true;
+};
+
+export const updateEvent = async (id: string, data: Partial<Omit<EventItem, 'id'>>): Promise<boolean> => {
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase.from('events').update(data).eq('id', id);
+    if (!error) return true;
+    console.error('Error updating event in Supabase:', error);
+  }
+  const list = getLocalStorage('immortal_events', mockEvents);
+  const updated = list.map((e: EventItem) => e.id === id ? { ...e, ...data } : e);
+  setLocalStorage('immortal_events', updated);
+  return true;
+};
+
+export const updateProduct = async (id: string, data: Partial<Omit<Product, 'id'>>): Promise<boolean> => {
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase.from('products').update(data).eq('id', id);
+    if (!error) return true;
+    console.error('Error updating product in Supabase:', error);
+  }
+  const list = getLocalStorage('immortal_products', mockProducts);
+  const updated = list.map((p: Product) => p.id === id ? { ...p, ...data } : p);
+  setLocalStorage('immortal_products', updated);
+  return true;
+};
