@@ -6,10 +6,10 @@ import {
   // Read APIs
   getPrograms, getEpisodes, getArtWorks, getMusicTracks, getBlogPosts, getEvents, getInquiries, getMembersList, getProducts, getOrders,
   // Mutation APIs
-  addProgram, deleteProgram, addEpisode, deleteEpisode, addMusicTrack, deleteMusicTrack, 
-  addArtWork, deleteArtWork, addBlogPost, deleteBlogPost, addEvent, deleteEvent, 
+  addProgram, deleteProgram, updateProgram, addEpisode, deleteEpisode, updateEpisode, addMusicTrack, deleteMusicTrack, updateMusicTrack,
+  addArtWork, deleteArtWork, updateArtWork, addBlogPost, deleteBlogPost, updateBlogPost, addEvent, deleteEvent, updateEvent,
   updateInquiryStatus, deleteInquiry, deleteMember, toggleAdminPrivilege, createAdminAccount,
-  addProduct, deleteProduct, updateOrderStatus, deleteOrder,
+  addProduct, deleteProduct, updateProduct, updateOrderStatus, deleteOrder,
   // Types
   Program, Episode, ArtWork, MusicTrack, BlogPost, EventItem, Inquiry, UserSession, Product, Order
 } from '@/lib/db';
@@ -193,20 +193,44 @@ export default function AdminPage() {
     e.preventDefault();
     if (!progTitle || !progCover) return;
     
-    await addProgram({
+    const payload = {
       title: progTitle,
       description: progDesc,
       cover_image: progCover,
       tags: progTags.split(',').map(t => t.trim()).filter(Boolean),
       slug: progTitle.toLowerCase().replace(/\s+/g, '-')
-    });
+    };
+
+    if (editingProgramId) {
+      await updateProgram(editingProgramId, payload);
+      setEditingProgramId(null);
+      triggerSuccess('Program Berhasil Diperbarui!');
+    } else {
+      await addProgram(payload);
+      triggerSuccess('Program Baru Berhasil Ditambahkan!');
+    }
 
     setProgTitle('');
     setProgDesc('');
     setProgCover('');
     setProgTags('');
-    triggerSuccess('Program Baru Berhasil Ditambahkan!');
     refreshData();
+  };
+
+  const handleStartEditProgram = (p: Program) => {
+    setEditingProgramId(p.id);
+    setProgTitle(p.title);
+    setProgDesc(p.description || '');
+    setProgCover(p.cover_image || '');
+    setProgTags(p.tags ? p.tags.join(', ') : '');
+  };
+
+  const handleCancelEditProgram = () => {
+    setEditingProgramId(null);
+    setProgTitle('');
+    setProgDesc('');
+    setProgCover('');
+    setProgTags('');
   };
 
   const handleDeleteProgram = async (id: string) => {
@@ -221,7 +245,7 @@ export default function AdminPage() {
     e.preventDefault();
     if (!epProgId || !epTitle || !epYoutubeId) return;
 
-    await addEpisode({
+    const payload = {
       program_id: epProgId,
       title: epTitle,
       description: epDesc,
@@ -230,7 +254,16 @@ export default function AdminPage() {
       episode_number: Number(epNumber),
       duration: epDuration,
       is_exclusive: epExclusive
-    });
+    };
+
+    if (editingEpisodeId) {
+      await updateEpisode(editingEpisodeId, payload);
+      setEditingEpisodeId(null);
+      triggerSuccess('Episode Berhasil Diperbarui!');
+    } else {
+      await addEpisode(payload);
+      triggerSuccess('Episode Baru Berhasil Ditambahkan!');
+    }
 
     setEpTitle('');
     setEpDesc('');
@@ -239,8 +272,31 @@ export default function AdminPage() {
     setEpNumber(1);
     setEpDuration('10:00');
     setEpExclusive(false);
-    triggerSuccess('Episode Baru Berhasil Ditambahkan!');
     refreshData();
+  };
+
+  const handleStartEditEpisode = (ep: Episode) => {
+    setEditingEpisodeId(ep.id);
+    setEpProgId(ep.program_id);
+    setEpTitle(ep.title);
+    setEpDesc(ep.description || '');
+    setEpYoutubeId(ep.youtube_id);
+    setEpSeason(ep.season);
+    setEpNumber(ep.episode_number || 1);
+    setEpDuration(ep.duration || '10:00');
+    setEpExclusive(ep.is_exclusive || false);
+  };
+
+  const handleCancelEditEpisode = () => {
+    setEditingEpisodeId(null);
+    setEpProgId('');
+    setEpTitle('');
+    setEpDesc('');
+    setEpYoutubeId('');
+    setEpSeason(1);
+    setEpNumber(1);
+    setEpDuration('10:00');
+    setEpExclusive(false);
   };
 
   const handleDeleteEpisode = async (id: string) => {
@@ -255,7 +311,7 @@ export default function AdminPage() {
     e.preventDefault();
     if (!trackTitle || !trackArtist || !trackCover || !trackAudioUrl) return;
 
-    await addMusicTrack({
+    const payload = {
       title: trackTitle,
       artist: trackArtist,
       album: trackAlbum,
@@ -265,7 +321,16 @@ export default function AdminPage() {
       apple_music_link: trackApple || 'https://music.apple.com',
       lyrics: trackLyrics,
       duration: trackDuration
-    });
+    };
+
+    if (editingTrackId) {
+      await updateMusicTrack(editingTrackId, payload);
+      setEditingTrackId(null);
+      triggerSuccess('Track Musik Berhasil Diperbarui!');
+    } else {
+      await addMusicTrack(payload);
+      triggerSuccess('Track Musik Berhasil Rilis!');
+    }
 
     setTrackTitle('');
     setTrackArtist('');
@@ -276,8 +341,33 @@ export default function AdminPage() {
     setTrackApple('');
     setTrackLyrics('');
     setTrackDuration('03:30');
-    triggerSuccess('Track Musik Berhasil Rilis!');
     refreshData();
+  };
+
+  const handleStartEditTrack = (t: MusicTrack) => {
+    setEditingTrackId(t.id);
+    setTrackTitle(t.title);
+    setTrackArtist(t.artist);
+    setTrackAlbum(t.album || '');
+    setTrackCover(t.cover_image || '');
+    setTrackAudioUrl(t.audio_url || '');
+    setTrackSpotify(t.spotify_embed || '');
+    setTrackApple(t.apple_music_link || '');
+    setTrackLyrics(t.lyrics || '');
+    setTrackDuration(t.duration || '03:30');
+  };
+
+  const handleCancelEditTrack = () => {
+    setEditingTrackId(null);
+    setTrackTitle('');
+    setTrackArtist('');
+    setTrackAlbum('');
+    setTrackCover('');
+    setTrackAudioUrl('');
+    setTrackSpotify('');
+    setTrackApple('');
+    setTrackLyrics('');
+    setTrackDuration('03:30');
   };
 
   const handleDeleteTrack = async (id: string) => {
@@ -292,14 +382,23 @@ export default function AdminPage() {
     e.preventDefault();
     if (!artTitle || !artImage) return;
 
-    await addArtWork({
+    const payload = {
       title: artTitle,
       artist_name: artArtist || 'Immortal Division Team',
       description: artDesc,
       image_url: artImage,
       category: artCategory,
       merch_link: artMerch
-    });
+    };
+
+    if (editingArtId) {
+      await updateArtWork(editingArtId, payload);
+      setEditingArtId(null);
+      triggerSuccess('Karya/Merch Berhasil Diperbarui!');
+    } else {
+      await addArtWork(payload);
+      triggerSuccess('Karya/Merch Berhasil Dipublikasikan!');
+    }
 
     setArtTitle('');
     setArtArtist('');
@@ -307,8 +406,27 @@ export default function AdminPage() {
     setArtImage('');
     setArtCategory('Digital Art');
     setArtMerch('');
-    triggerSuccess('Karya/Merch Berhasil Dipublikasikan!');
     refreshData();
+  };
+
+  const handleStartEditArt = (a: ArtWork) => {
+    setEditingArtId(a.id);
+    setArtTitle(a.title);
+    setArtArtist(a.artist_name || 'Immortal Division Team');
+    setArtDesc(a.description || '');
+    setArtImage(a.image_url);
+    setArtCategory(a.category || 'Digital Art');
+    setArtMerch(a.merch_link || '');
+  };
+
+  const handleCancelEditArt = () => {
+    setEditingArtId(null);
+    setArtTitle('');
+    setArtArtist('');
+    setArtDesc('');
+    setArtImage('');
+    setArtCategory('Digital Art');
+    setArtMerch('');
   };
 
   const handleDeleteArt = async (id: string) => {
@@ -323,7 +441,7 @@ export default function AdminPage() {
     e.preventDefault();
     if (!blogTitle || !blogContent || !blogCover) return;
 
-    await addBlogPost({
+    const payload = {
       title: blogTitle,
       excerpt: blogExcerpt,
       content: blogContent,
@@ -331,7 +449,16 @@ export default function AdminPage() {
       category: blogCategory,
       slug: blogTitle.toLowerCase().replace(/\s+/g, '-'),
       authorName: blogAuthor || 'Immortal Admin'
-    });
+    };
+
+    if (editingBlogPostId) {
+      await updateBlogPost(editingBlogPostId, payload);
+      setEditingBlogPostId(null);
+      triggerSuccess('Artikel Berhasil Diperbarui!');
+    } else {
+      await addBlogPost(payload);
+      triggerSuccess('Artikel Berhasil Dipublikasikan di Immortal Journal!');
+    }
 
     setBlogTitle('');
     setBlogExcerpt('');
@@ -339,8 +466,27 @@ export default function AdminPage() {
     setBlogCover('');
     setBlogCategory('Music News');
     setBlogAuthor('');
-    triggerSuccess('Artikel Berhasil Dipublikasikan di Immortal Journal!');
     refreshData();
+  };
+
+  const handleStartEditBlogPost = (bp: BlogPost) => {
+    setEditingBlogPostId(bp.id);
+    setBlogTitle(bp.title);
+    setBlogExcerpt(bp.excerpt || '');
+    setBlogContent(bp.content);
+    setBlogCover(bp.cover_image || '');
+    setBlogCategory(bp.category || 'Music News');
+    setBlogAuthor(bp.author?.full_name || 'Immortal Admin');
+  };
+
+  const handleCancelEditBlogPost = () => {
+    setEditingBlogPostId(null);
+    setBlogTitle('');
+    setBlogExcerpt('');
+    setBlogContent('');
+    setBlogCover('');
+    setBlogCategory('Music News');
+    setBlogAuthor('');
   };
 
   const handleDeleteBlogPost = async (id: string) => {
@@ -355,7 +501,7 @@ export default function AdminPage() {
     e.preventDefault();
     if (!evtTitle || !evtLocation || !evtDate || !evtCover) return;
 
-    await addEvent({
+    const payload = {
       title: evtTitle,
       description: evtDesc,
       location: evtLocation,
@@ -364,7 +510,16 @@ export default function AdminPage() {
       ticket_link: evtTicket,
       price_info: evtPrice,
       is_online: evtOnline
-    });
+    };
+
+    if (editingEventId) {
+      await updateEvent(editingEventId, payload);
+      setEditingEventId(null);
+      triggerSuccess('Event Berhasil Diperbarui!');
+    } else {
+      await addEvent(payload);
+      triggerSuccess('Event Baru Berhasil Terjadwal!');
+    }
 
     setEvtTitle('');
     setEvtDesc('');
@@ -374,8 +529,39 @@ export default function AdminPage() {
     setEvtTicket('');
     setEvtPrice('Free');
     setEvtOnline(false);
-    triggerSuccess('Event Baru Berhasil Terjadwal!');
     refreshData();
+  };
+
+  const handleStartEditEvent = (evt: EventItem) => {
+    setEditingEventId(evt.id);
+    setEvtTitle(evt.title);
+    setEvtDesc(evt.description || '');
+    setEvtLocation(evt.location);
+    
+    let formattedDate = '';
+    if (evt.start_date) {
+      const d = new Date(evt.start_date);
+      const tzOffset = d.getTimezoneOffset() * 60000;
+      const localISOTime = (new Date(d.getTime() - tzOffset)).toISOString().slice(0, 16);
+      formattedDate = localISOTime;
+    }
+    setEvtDate(formattedDate);
+    setEvtCover(evt.cover_image || '');
+    setEvtTicket(evt.ticket_link || '');
+    setEvtPrice(evt.price_info || 'Free');
+    setEvtOnline(evt.is_online || false);
+  };
+
+  const handleCancelEditEvent = () => {
+    setEditingEventId(null);
+    setEvtTitle('');
+    setEvtDesc('');
+    setEvtLocation('');
+    setEvtDate('');
+    setEvtCover('');
+    setEvtTicket('');
+    setEvtPrice('Free');
+    setEvtOnline(false);
   };
 
   const handleDeleteEvent = async (id: string) => {
@@ -450,7 +636,7 @@ export default function AdminPage() {
     e.preventDefault();
     if (!prodName || !prodPrice || !prodImage) return;
 
-    await addProduct({
+    const payload = {
       name: prodName,
       description: prodDesc,
       price: Number(prodPrice),
@@ -458,7 +644,16 @@ export default function AdminPage() {
       stock: Number(prodStock),
       category: prodCategory,
       sizes: prodSizes.split(',').map(s => s.trim()).filter(Boolean)
-    });
+    };
+
+    if (editingProductId) {
+      await updateProduct(editingProductId, payload);
+      setEditingProductId(null);
+      triggerSuccess('Produk Berhasil Diperbarui!');
+    } else {
+      await addProduct(payload);
+      triggerSuccess('Produk Store Berhasil Ditambahkan!');
+    }
 
     setProdName('');
     setProdDesc('');
@@ -466,8 +661,28 @@ export default function AdminPage() {
     setProdImage('');
     setProdStock(10);
     setProdSizes('S, M, L, XL');
-    triggerSuccess('Produk Store Berhasil Ditambahkan!');
     refreshData();
+  };
+
+  const handleStartEditProduct = (prod: Product) => {
+    setEditingProductId(prod.id);
+    setProdName(prod.name);
+    setProdDesc(prod.description || '');
+    setProdPrice(prod.price);
+    setProdImage(prod.image_url);
+    setProdStock(prod.stock || 0);
+    setProdCategory(prod.category || 'Baju');
+    setProdSizes(prod.sizes ? prod.sizes.join(', ') : 'S, M, L, XL');
+  };
+
+  const handleCancelEditProduct = () => {
+    setEditingProductId(null);
+    setProdName('');
+    setProdDesc('');
+    setProdPrice(0);
+    setProdImage('');
+    setProdStock(10);
+    setProdSizes('S, M, L, XL');
   };
 
   const handleDeleteProduct = async (id: string) => {
@@ -766,13 +981,24 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    <button
-                      type="submit"
-                      className="flex cursor-pointer w-full items-center justify-center gap-1.5 rounded-xl bg-primary py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-primary-hover transition"
-                    >
-                      <Plus size={14} />
-                      <span>Add Program</span>
-                    </button>
+                    <div className="flex gap-2 w-full">
+                      <button
+                        type="submit"
+                        className="flex-1 flex cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-primary py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-primary-hover transition"
+                      >
+                        {editingProgramId ? <Check size={14} /> : <Plus size={14} />}
+                        <span>{editingProgramId ? 'Update Program' : 'Add Program'}</span>
+                      </button>
+                      {editingProgramId && (
+                        <button
+                          type="button"
+                          onClick={handleCancelEditProgram}
+                          className="px-4 rounded-xl border border-white/10 hover:bg-white/5 text-xs font-bold uppercase text-white transition"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
                   </form>
 
                   {/* List */}
@@ -788,12 +1014,21 @@ export default function AdminPage() {
                               <p className="text-[9px] text-muted">slug: /{p.slug}</p>
                             </div>
                           </div>
-                          <button
-                            onClick={() => handleDeleteProgram(p.id)}
-                            className="rounded-lg bg-rose-950/20 p-2 text-rose-400 hover:bg-rose-950/40"
-                          >
-                            <Trash2 size={12} />
-                          </button>
+                          <div className="flex gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => handleStartEditProgram(p)}
+                              className="rounded-lg bg-primary/10 p-2 text-primary hover:bg-primary/20"
+                            >
+                              <Edit size={12} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteProgram(p.id)}
+                              className="rounded-lg bg-rose-950/20 p-2 text-rose-400 hover:bg-rose-950/40"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -813,7 +1048,7 @@ export default function AdminPage() {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   {/* Form */}
                   <form onSubmit={handleAddEpisode} className="rounded-3xl border border-white/5 bg-[#08080a] p-6 space-y-4">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-white/5 pb-2">ADD EPISODE</h3>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-white/5 pb-2">{editingEpisodeId ? 'EDIT EPISODE' : 'ADD EPISODE'}</h3>
                     
                     <div className="space-y-3">
                       <div>
@@ -909,13 +1144,24 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    <button
-                      type="submit"
-                      className="flex cursor-pointer w-full items-center justify-center gap-1.5 rounded-xl bg-primary py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-primary-hover transition"
-                    >
-                      <Plus size={14} />
-                      <span>Add Episode</span>
-                    </button>
+                    <div className="flex gap-2 w-full">
+                      <button
+                        type="submit"
+                        className="flex-1 flex cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-primary py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-primary-hover transition"
+                      >
+                        {editingEpisodeId ? <Check size={14} /> : <Plus size={14} />}
+                        <span>{editingEpisodeId ? 'Update Episode' : 'Add Episode'}</span>
+                      </button>
+                      {editingEpisodeId && (
+                        <button
+                          type="button"
+                          onClick={handleCancelEditEpisode}
+                          className="px-4 rounded-xl border border-white/10 hover:bg-white/5 text-xs font-bold uppercase text-white transition"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
                   </form>
 
                   {/* List */}
@@ -935,12 +1181,21 @@ export default function AdminPage() {
                                 <span className="inline-block rounded bg-primary/10 border border-primary/20 text-[8px] text-primary px-1 mt-1 font-bold">MEMBER GATED</span>
                               )}
                             </div>
-                            <button
-                              onClick={() => handleDeleteEpisode(e.id)}
-                              className="rounded-lg bg-rose-950/20 p-2 text-rose-400 hover:bg-rose-950/40 shrink-0"
-                            >
-                              <Trash2 size={12} />
-                            </button>
+                            <div className="flex gap-1 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => handleStartEditEpisode(e)}
+                                className="rounded-lg bg-primary/10 p-2 text-primary hover:bg-primary/20"
+                              >
+                                <Edit size={12} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteEpisode(e.id)}
+                                className="rounded-lg bg-rose-950/20 p-2 text-rose-400 hover:bg-rose-950/40 shrink-0"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
                           </div>
                         );
                       })}
@@ -961,7 +1216,7 @@ export default function AdminPage() {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   {/* Form */}
                   <form onSubmit={handleAddTrack} className="rounded-3xl border border-white/5 bg-[#08080a] p-6 space-y-4">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-white/5 pb-2">RELEASE TRACK</h3>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-white/5 pb-2">{editingTrackId ? 'EDIT MUSIC TRACK' : 'RELEASE TRACK'}</h3>
                     
                     <div className="space-y-3">
                       <div className="grid grid-cols-2 gap-3">
@@ -1065,13 +1320,24 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    <button
-                      type="submit"
-                      className="flex cursor-pointer w-full items-center justify-center gap-1.5 rounded-xl bg-primary py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-primary-hover transition"
-                    >
-                      <Plus size={14} />
-                      <span>Release Track</span>
-                    </button>
+                    <div className="flex gap-2 w-full">
+                      <button
+                        type="submit"
+                        className="flex-1 flex cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-primary py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-primary-hover transition"
+                      >
+                        {editingTrackId ? <Check size={14} /> : <Plus size={14} />}
+                        <span>{editingTrackId ? 'Update Track' : 'Release Track'}</span>
+                      </button>
+                      {editingTrackId && (
+                        <button
+                          type="button"
+                          onClick={handleCancelEditTrack}
+                          className="px-4 rounded-xl border border-white/10 hover:bg-white/5 text-xs font-bold uppercase text-white transition"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
                   </form>
 
                   {/* List */}
@@ -1087,12 +1353,21 @@ export default function AdminPage() {
                               <p className="text-[9px] text-muted">{t.artist} — {t.album || 'No Album'}</p>
                             </div>
                           </div>
-                          <button
-                            onClick={() => handleDeleteTrack(t.id)}
-                            className="rounded-lg bg-rose-950/20 p-2 text-rose-400 hover:bg-rose-950/40 shrink-0"
-                          >
-                            <Trash2 size={12} />
-                          </button>
+                          <div className="flex gap-1.5 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => handleStartEditTrack(t)}
+                              className="rounded-lg bg-primary/10 p-2 text-primary hover:bg-primary/20"
+                            >
+                              <Edit size={12} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteTrack(t.id)}
+                              className="rounded-lg bg-rose-950/20 p-2 text-rose-400 hover:bg-rose-950/40 shrink-0"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1112,7 +1387,7 @@ export default function AdminPage() {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   {/* Form */}
                   <form onSubmit={handleAddArt} className="rounded-3xl border border-white/5 bg-[#08080a] p-6 space-y-4">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-white/5 pb-2">ADD ARTWORK</h3>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-white/5 pb-2">{editingArtId ? 'EDIT ARTWORK' : 'ADD ARTWORK'}</h3>
                     
                     <div className="space-y-3">
                       <div>
@@ -1172,13 +1447,24 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    <button
-                      type="submit"
-                      className="flex cursor-pointer w-full items-center justify-center gap-1.5 rounded-xl bg-primary py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-primary-hover transition"
-                    >
-                      <Plus size={14} />
-                      <span>Add artwork</span>
-                    </button>
+                    <div className="flex gap-2 w-full">
+                      <button
+                        type="submit"
+                        className="flex-1 flex cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-primary py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-primary-hover transition"
+                      >
+                        {editingArtId ? <Check size={14} /> : <Plus size={14} />}
+                        <span>{editingArtId ? 'Update Artwork' : 'Add Artwork'}</span>
+                      </button>
+                      {editingArtId && (
+                        <button
+                          type="button"
+                          onClick={handleCancelEditArt}
+                          className="px-4 rounded-xl border border-white/10 hover:bg-white/5 text-xs font-bold uppercase text-white transition"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
                   </form>
 
                   {/* List */}
@@ -1194,12 +1480,21 @@ export default function AdminPage() {
                               <p className="text-[9px] text-muted">Category: {a.category}</p>
                             </div>
                           </div>
-                          <button
-                            onClick={() => handleDeleteArt(a.id)}
-                            className="rounded-lg bg-rose-950/20 p-2 text-rose-400 hover:bg-rose-950/40 shrink-0"
-                          >
-                            <Trash2 size={12} />
-                          </button>
+                          <div className="flex gap-1.5 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => handleStartEditArt(a)}
+                              className="rounded-lg bg-primary/10 p-2 text-primary hover:bg-primary/20"
+                            >
+                              <Edit size={12} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteArt(a.id)}
+                              className="rounded-lg bg-rose-950/20 p-2 text-rose-400 hover:bg-rose-950/40 shrink-0"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1219,7 +1514,7 @@ export default function AdminPage() {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   {/* Form */}
                   <form onSubmit={handleAddProduct} className="rounded-3xl border border-white/5 bg-[#08080a] p-6 space-y-4">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-white/5 pb-2">ADD PRODUCT</h3>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-white/5 pb-2">{editingProductId ? 'EDIT PRODUCT' : 'ADD PRODUCT'}</h3>
                     
                     <div className="space-y-3">
                       <div>
@@ -1306,13 +1601,24 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    <button
-                      type="submit"
-                      className="flex cursor-pointer w-full items-center justify-center gap-1.5 rounded-xl bg-primary py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-primary-hover transition"
-                    >
-                      <Plus size={14} />
-                      <span>Add Product</span>
-                    </button>
+                    <div className="flex gap-2 w-full">
+                      <button
+                        type="submit"
+                        className="flex-1 flex cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-primary py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-primary-hover transition"
+                      >
+                        {editingProductId ? <Check size={14} /> : <Plus size={14} />}
+                        <span>{editingProductId ? 'Update Product' : 'Add Product'}</span>
+                      </button>
+                      {editingProductId && (
+                        <button
+                          type="button"
+                          onClick={handleCancelEditProduct}
+                          className="px-4 rounded-xl border border-white/10 hover:bg-white/5 text-xs font-bold uppercase text-white transition"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
                   </form>
 
                   {/* List */}
@@ -1328,12 +1634,21 @@ export default function AdminPage() {
                               <p className="text-[9px] text-muted">{prod.category} • {formatIDR(prod.price)} • Stock: {prod.stock}</p>
                             </div>
                           </div>
-                          <button
-                            onClick={() => handleDeleteProduct(prod.id)}
-                            className="rounded-lg bg-rose-950/20 p-2 text-rose-400 hover:bg-rose-950/40 shrink-0"
-                          >
-                            <Trash2 size={12} />
-                          </button>
+                          <div className="flex gap-1.5 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => handleStartEditProduct(prod)}
+                              className="rounded-lg bg-primary/10 p-2 text-primary hover:bg-primary/20"
+                            >
+                              <Edit size={12} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteProduct(prod.id)}
+                              className="rounded-lg bg-rose-950/20 p-2 text-rose-400 hover:bg-rose-950/40 shrink-0"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1445,7 +1760,7 @@ export default function AdminPage() {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   {/* Form */}
                   <form onSubmit={handleAddBlogPost} className="rounded-3xl border border-white/5 bg-[#08080a] p-6 space-y-4">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-white/5 pb-2">PUBLISH ARTICLE</h3>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-white/5 pb-2">{editingBlogPostId ? 'EDIT ARTICLE' : 'PUBLISH ARTICLE'}</h3>
                     
                     <div className="space-y-3">
                       <div>
@@ -1518,13 +1833,24 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    <button
-                      type="submit"
-                      className="flex cursor-pointer w-full items-center justify-center gap-1.5 rounded-xl bg-primary py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-primary-hover transition"
-                    >
-                      <Plus size={14} />
-                      <span>Publish Blog</span>
-                    </button>
+                    <div className="flex gap-2 w-full">
+                      <button
+                        type="submit"
+                        className="flex-1 flex cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-primary py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-primary-hover transition"
+                      >
+                        {editingBlogPostId ? <Check size={14} /> : <Plus size={14} />}
+                        <span>{editingBlogPostId ? 'Update Article' : 'Publish Blog'}</span>
+                      </button>
+                      {editingBlogPostId && (
+                        <button
+                          type="button"
+                          onClick={handleCancelEditBlogPost}
+                          className="px-4 rounded-xl border border-white/10 hover:bg-white/5 text-xs font-bold uppercase text-white transition"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
                   </form>
 
                   {/* List */}
@@ -1540,12 +1866,21 @@ export default function AdminPage() {
                               <p className="text-[9px] text-muted">Author: {p.author?.full_name || 'Admin'} • {p.category}</p>
                             </div>
                           </div>
-                          <button
-                            onClick={() => handleDeleteBlogPost(p.id)}
-                            className="rounded-lg bg-rose-950/20 p-2 text-rose-400 hover:bg-rose-950/40 shrink-0"
-                          >
-                            <Trash2 size={12} />
-                          </button>
+                          <div className="flex gap-1.5 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => handleStartEditBlogPost(p)}
+                              className="rounded-lg bg-primary/10 p-2 text-primary hover:bg-primary/20"
+                            >
+                              <Edit size={12} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteBlogPost(p.id)}
+                              className="rounded-lg bg-rose-950/20 p-2 text-rose-400 hover:bg-rose-950/40 shrink-0"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1565,7 +1900,7 @@ export default function AdminPage() {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   {/* Form */}
                   <form onSubmit={handleAddEvent} className="rounded-3xl border border-white/5 bg-[#08080a] p-6 space-y-4">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-white/5 pb-2">SCHEDULE EVENT</h3>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-white/5 pb-2">{editingEventId ? 'EDIT EVENT' : 'SCHEDULE EVENT'}</h3>
                     
                     <div className="space-y-3">
                       <div>
@@ -1658,13 +1993,24 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    <button
-                      type="submit"
-                      className="flex cursor-pointer w-full items-center justify-center gap-1.5 rounded-xl bg-primary py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-primary-hover transition"
-                    >
-                      <Plus size={14} />
-                      <span>Schedule Event</span>
-                    </button>
+                    <div className="flex gap-2 w-full">
+                      <button
+                        type="submit"
+                        className="flex-1 flex cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-primary py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-primary-hover transition"
+                      >
+                        {editingEventId ? <Check size={14} /> : <Plus size={14} />}
+                        <span>{editingEventId ? 'Update Event' : 'Schedule Event'}</span>
+                      </button>
+                      {editingEventId && (
+                        <button
+                          type="button"
+                          onClick={handleCancelEditEvent}
+                          className="px-4 rounded-xl border border-white/10 hover:bg-white/5 text-xs font-bold uppercase text-white transition"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
                   </form>
 
                   {/* List */}
@@ -1680,12 +2026,21 @@ export default function AdminPage() {
                               <p className="text-[9px] text-muted">{formatShortDate(e.start_date)} • {e.location}</p>
                             </div>
                           </div>
-                          <button
-                            onClick={() => handleDeleteEvent(e.id)}
-                            className="rounded-lg bg-rose-950/20 p-2 text-rose-400 hover:bg-rose-950/40 shrink-0"
-                          >
-                            <Trash2 size={12} />
-                          </button>
+                          <div className="flex gap-1.5 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => handleStartEditEvent(e)}
+                              className="rounded-lg bg-primary/10 p-2 text-primary hover:bg-primary/20"
+                            >
+                              <Edit size={12} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteEvent(e.id)}
+                              className="rounded-lg bg-rose-950/20 p-2 text-rose-400 hover:bg-rose-950/40 shrink-0"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
