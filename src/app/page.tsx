@@ -100,7 +100,7 @@ export default function HomePage() {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="max-w-xl text-lg text-neutral-400"
               >
-                EvoluMedia mengonsolidasikan karya, kurasi rilisan musik independen, program live studio, jurnalisme tajam, serta event komunitas eksklusif.
+                Immortal Division mengonsolidasikan karya, kurasi rilisan musik independen, program live studio, jurnalisme tajam, serta event komunitas eksklusif.
               </motion.p>
 
               {/* Action Buttons */}
@@ -140,7 +140,7 @@ export default function HomePage() {
               >
                 <img
                   src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=80"
-                  alt="EvoluMedia Sound Stage"
+                  alt="Immortal Division Sound Stage"
                   className="h-[300px] w-full rounded-2xl object-cover sm:h-[400px]"
                 />
                 

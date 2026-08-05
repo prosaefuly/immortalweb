@@ -1,9 +1,9 @@
--- EvoluMedia Database Seed SQL (Supabase PostgreSQL)
+-- Immortal Division Database Seed SQL (Supabase PostgreSQL)
 
 -- 1. Create Auth Users (auth.users schema)
 -- Using extensions.crypt with bcrypt hash to register users with password 'PastiSukses' for admin, and 'password123' for members.
 
--- 1a. Master Admin (admin@evolumedia.com / password: PastiSukses)
+-- 1a. Master Admin (admin@immortaldivision.com / password: PastiSukses)
 INSERT INTO auth.users (
     instance_id,
     id,
@@ -25,7 +25,7 @@ INSERT INTO auth.users (
     '88888888-8888-4888-a888-888888888888',
     'authenticated',
     'authenticated',
-    'admin@evolumedia.com',
+    'admin@immortaldivision.com',
     crypt('PastiSukses', gen_salt('bf')),
     NOW(),
     '{"provider":"email","providers":["email"]}',
@@ -119,7 +119,7 @@ VALUES (
     'master_admin',
     'Master Admin',
     'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80',
-    'EvoluMedia Chief System Administrator.',
+    'Immortal Division Chief System Administrator.',
     TRUE,
     NOW(),
     NOW()
@@ -156,7 +156,7 @@ VALUES (
 INSERT INTO public.programs (id, title, description, cover_image, tags, slug, created_at)
 VALUES (
     '11111111-1111-4111-a111-111111111111',
-    'Evolu Studio Sessions',
+    'Immortal Studio Sessions',
     'Exclusive live performances and intimate studio raw takes from outstanding independent music artists.',
     'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=800&auto=format&fit=crop&q=80',
     ARRAY['Live Music', 'Acoustic', 'Raw'],
@@ -178,8 +178,8 @@ VALUES (
 INSERT INTO public.programs (id, title, description, cover_image, tags, slug, created_at)
 VALUES (
     '11111111-1111-4111-a111-333333333333',
-    'Evolu Records Showcase',
-    'Documenting the songwriting and production processes behind the latest EvoluMedia label releases.',
+    'Immortal Records Showcase',
+    'Documenting the songwriting and production processes behind the latest Immortal Division label releases.',
     'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80',
     ARRAY['Behind the Scenes', 'Songwriting', 'Label'],
     'records-showcase',
@@ -193,7 +193,7 @@ VALUES (
     '33333333-3333-4333-b333-111111111111',
     '11111111-1111-4111-a111-111111111111',
     'Lofi Indie Folk Set: Waves of Autumn (Live)',
-    'An acoustic performance of Waves of Autumn. Recorded live in Evolu Studio Room A with multi-angle capture.',
+    'An acoustic performance of Waves of Autumn. Recorded live in Immortal Studio Room A with multi-angle capture.',
     'coPZJz6b9jM',
     1,
     1,
@@ -263,9 +263,9 @@ VALUES (
 INSERT INTO public.art_works (id, title, artist_name, description, image_url, merch_link, category)
 VALUES (
     '44444444-4444-4444-c444-111111111111',
-    'Evolu Records Showcase Poster',
+    'Immortal Records Showcase Poster',
     'VibrantRed Design',
-    'Limited edition high-density print poster designed for the launch event of Evolu Records.',
+    'Limited edition high-density print poster designed for the launch event of Immortal Records.',
     'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&auto=format&fit=crop&q=80',
     'https://tokopedia.com',
     'Poster Art'
@@ -327,7 +327,7 @@ VALUES (
     '55555555-5555-4555-d555-333333333333',
     'Acoustic Rain',
     'Sarah & The Synths',
-    'Evolu Studio Live',
+    'Immortal Studio Live',
     'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&auto=format&fit=crop&q=80',
     'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
     '<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/1PZj4rM3tC5P9vXy6sWv9v" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>',
@@ -363,9 +363,9 @@ A staple in the modern city-pop revival, Kurosuke mixes infectious baseline rhyt
 INSERT INTO public.events (id, title, description, location, start_date, end_date, cover_image, ticket_link, price_info, is_online)
 VALUES (
     '77777777-7777-4777-f777-111111111111',
-    'Evolu Showcase: Vol. 1 (Jakarta)',
+    'Immortal Showcase: Vol. 1 (Jakarta)',
     'An intimate evening featuring live performances by Luna Eclipse and Retro Runner, followed by an open analog synthesizer jam session.',
-    'Studio Room A, EvoluMedia HQ, Jakarta',
+    'Studio Room A, Immortal Division HQ, Jakarta',
     NOW() + INTERVAL '10 days',
     NOW() + INTERVAL '10 days' + INTERVAL '4 hours',
     'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80',
@@ -393,8 +393,8 @@ VALUES (
 INSERT INTO public.products (id, name, description, price, image_url, stock, sizes, category, created_at)
 VALUES (
     '99999999-9999-4999-9999-111111111111',
-    'Evolu Records Oversized Tee',
-    'Kaos oversized katun berat 24s premium berwarna hitam pekat dengan bordir logo merah Evolu di dada depan dan sablon grafis analog waves di punggung.',
+    'Immortal Records Oversized Tee',
+    'Kaos oversized katun berat 24s premium berwarna hitam pekat dengan bordir logo merah Immortal di dada depan dan sablon grafis analog waves di punggung.',
     185000,
     'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80',
     50,
@@ -419,7 +419,7 @@ VALUES (
 INSERT INTO public.products (id, name, description, price, image_url, stock, sizes, category, created_at)
 VALUES (
     '99999999-9999-4999-9999-333333333333',
-    'Evolu Dad Cap (Crimson Accent)',
+    'Immortal Dad Cap (Crimson Accent)',
     'Topi katun twill washed dengan pengait logam kuningan di belakang. Logo grafis gelombang suara crimson disulam rapi di sisi depan.',
     120000,
     'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800&auto=format&fit=crop&q=80',
@@ -446,7 +446,7 @@ VALUES (
 -- 10. Seed Orders Table (public.orders)
 INSERT INTO public.orders (id, product_id, buyer_name, buyer_email, buyer_phone, buyer_address, quantity, size, total_price, payment_status, created_at)
 VALUES (
-    'EVO-ORD-882191',
+    'IMM-ORD-882191',
     '99999999-9999-4999-9999-111111111111',
     'Joko Prabowo',
     'joko@gmail.com',

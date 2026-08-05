@@ -265,7 +265,7 @@ export default function BlogDetailPage({ params }: PageProps) {
             ) : (
               <div className="rounded-2xl border border-white/5 bg-black/40 p-6 text-center">
                 <p className="text-sm text-muted">
-                  Hanya member EvoluMedia yang dapat berpartisipasi dalam diskusi artikel.
+                  Hanya member Immortal Division yang dapat berpartisipasi dalam diskusi artikel.
                 </p>
                 <button
                   onClick={() => setShowAuthModal(true)}

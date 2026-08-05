@@ -286,7 +286,7 @@ export default function AdminPage() {
 
     await addArtWork({
       title: artTitle,
-      artist_name: artArtist || 'EvoluMedia Team',
+      artist_name: artArtist || 'Immortal Division Team',
       description: artDesc,
       image_url: artImage,
       category: artCategory,
@@ -322,7 +322,7 @@ export default function AdminPage() {
       cover_image: blogCover,
       category: blogCategory,
       slug: blogTitle.toLowerCase().replace(/\s+/g, '-'),
-      authorName: blogAuthor || 'Evolu Admin'
+      authorName: blogAuthor || 'Immortal Admin'
     });
 
     setBlogTitle('');
@@ -331,7 +331,7 @@ export default function AdminPage() {
     setBlogCover('');
     setBlogCategory('Music News');
     setBlogAuthor('');
-    triggerSuccess('Artikel Berhasil Dipublikasikan di Evolu Journal!');
+    triggerSuccess('Artikel Berhasil Dipublikasikan di Immortal Journal!');
     refreshData();
   };
 
@@ -401,7 +401,7 @@ export default function AdminPage() {
       username: newAdminUser.toLowerCase().replace(/\s+/g, '_'),
       fullName: newAdminName,
       avatarUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80',
-      bio: newAdminBio || 'Co-Administrator of EvoluMedia.'
+      bio: newAdminBio || 'Co-Administrator of Immortal Division.'
     });
 
     if (ok) {
@@ -530,7 +530,7 @@ export default function AdminPage() {
                 <input
                   type="email"
                   required
-                  placeholder="admin@evolumedia.com"
+                  placeholder="admin@immortaldivision.com"
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
                   className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none focus:border-primary/50"
@@ -595,7 +595,7 @@ export default function AdminPage() {
                 A
               </span>
               <div>
-                <h2 className="text-sm font-black uppercase tracking-wider text-white">EvoluAdmin</h2>
+                <h2 className="text-sm font-black uppercase tracking-wider text-white">ImmortalAdmin</h2>
                 <p className="text-[10px] text-primary font-semibold">Master System</p>
               </div>
             </div>
@@ -662,7 +662,7 @@ export default function AdminPage() {
                 {/* Header */}
                 <div>
                   <h1 className="text-2xl font-black uppercase text-white tracking-wider">OVERVIEW ANALYTICS</h1>
-                  <p className="text-xs text-muted">Statistik dasar operasional EvoluMedia platform.</p>
+                  <p className="text-xs text-muted">Statistik dasar operasional Immortal Division platform.</p>
                 </div>
 
                 {/* Counters Widgets Grid */}
@@ -694,7 +694,7 @@ export default function AdminPage() {
                 <div className="rounded-3xl border border-primary/20 bg-gradient-to-r from-red-950/10 via-black to-neutral-900/30 p-6 md:p-8 glass-red">
                   <h3 className="text-lg font-bold text-white uppercase tracking-wider">Master System Configuration</h3>
                   <p className="text-xs text-neutral-400 mt-2 leading-relaxed max-w-2xl">
-                    Selamat datang di panel admin EvoluMedia. Di sini Anda memiliki kontrol penuh atas konten yang ditampilkan di situs utama. Anda dapat menambahkan konten baru (video original, track rilisan lagu, blog jurnalisme, event, merchandise) atau mengelola status database akun member, order toko, dan inquiries kemitraan komersial.
+                    Selamat datang di panel admin Immortal Division. Di sini Anda memiliki kontrol penuh atas konten yang ditampilkan di situs utama. Anda dapat menambahkan konten baru (video original, track rilisan lagu, blog jurnalisme, event, merchandise) atau mengelola status database akun member, order toko, dan inquiries kemitraan komersial.
                   </p>
                 </div>
               </div>
@@ -719,7 +719,7 @@ export default function AdminPage() {
                         <input
                           type="text"
                           required
-                          placeholder="e.g. Evolu Studio Sessions"
+                          placeholder="e.g. Immortal Studio Sessions"
                           value={progTitle}
                           onChange={(e) => setProgTitle(e.target.value)}
                           className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none focus:border-primary/50"
@@ -1219,7 +1219,7 @@ export default function AdminPage() {
                         <input
                           type="text"
                           required
-                          placeholder="e.g. Evolu Hoodie"
+                          placeholder="e.g. Immortal Hoodie"
                           value={prodName}
                           onChange={(e) => setProdName(e.target.value)}
                           className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none focus:border-primary/50"
@@ -1406,7 +1406,7 @@ export default function AdminPage() {
 
                           {/* Chat Buyer on WhatsApp */}
                           <a
-                            href={`https://wa.me/${ord.buyer_phone}?text=${encodeURIComponent(`Halo ${ord.buyer_name}, kami dari EvoluMedia Store ingin mengonfirmasi pesanan Anda dengan Order ID ${ord.id}.`)}`}
+                            href={`https://wa.me/${ord.buyer_phone}?text=${encodeURIComponent(`Halo ${ord.buyer_name}, kami dari Immortal Division Store ingin mengonfirmasi pesanan Anda dengan Order ID ${ord.id}.`)}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-1 rounded-lg bg-primary/10 border border-primary/25 py-1.5 px-3 text-[10px] font-bold uppercase tracking-widest text-primary hover:bg-primary hover:text-white transition"
@@ -1778,7 +1778,7 @@ export default function AdminPage() {
                           <input
                             type="email"
                             required
-                            placeholder="admin2@evolumedia.com"
+                            placeholder="admin2@immortaldivision.com"
                             value={newAdminEmail}
                             onChange={(e) => setNewAdminEmail(e.target.value)}
                             className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none focus:border-primary/50"

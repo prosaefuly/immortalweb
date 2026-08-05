@@ -152,7 +152,7 @@ export default function ProgramDetailPage({ params }: PageProps) {
                     MEMBER EXCLUSIVE VIDEO
                   </h3>
                   <p className="mt-2 max-w-md text-sm text-neutral-400">
-                    Episode &quot;{activeEpisode.title}&quot; merupakan konten eksklusif. Bergabunglah dengan klub member EvoluMedia untuk menonton program ini secara penuh.
+                    Episode &quot;{activeEpisode.title}&quot; merupakan konten eksklusif. Bergabunglah dengan klub member Immortal Division untuk menonton program ini secara penuh.
                   </p>
                   <button
                     onClick={() => setShowAuthModal(true)}
@@ -241,7 +241,7 @@ export default function ProgramDetailPage({ params }: PageProps) {
             ) : (
               <div className="rounded-2xl border border-white/5 bg-black/40 p-6 text-center">
                 <p className="text-sm text-muted">
-                  Hanya member EvoluMedia yang dapat berpartisipasi dalam diskusi.
+                  Hanya member Immortal Division yang dapat berpartisipasi dalam diskusi.
                 </p>
                 <button
                   onClick={() => setShowAuthModal(true)}

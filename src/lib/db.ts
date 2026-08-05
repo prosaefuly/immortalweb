@@ -16,7 +16,7 @@ export const supabase = isSupabaseConfigured
 
 if (typeof window !== 'undefined') {
   console.log(
-    "EvoluMedia DB Connection Mode:",
+    "Immortal Division DB Connection Mode:",
     isSupabaseConfigured 
       ? "CONNECTED TO SUPABASE CLOUD ✅" 
       : "FALLBACK TO LOCAL STORAGE MOCK ❌ (Periksa file .env.local Anda)"
@@ -163,7 +163,7 @@ export interface Order {
 const mockPrograms: Program[] = [
   {
     id: 'prog-1',
-    title: 'Evolu Studio Sessions',
+    title: 'Immortal Studio Sessions',
     description: 'Exclusive live performances and intimate studio raw takes from outstanding independent music artists.',
     cover_image: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=800&auto=format&fit=crop&q=80',
     tags: ['Live Music', 'Acoustic', 'Raw'],
@@ -179,8 +179,8 @@ const mockPrograms: Program[] = [
   },
   {
     id: 'prog-3',
-    title: 'Evolu Records Showcase',
-    description: 'Documenting the songwriting and production processes behind the latest EvoluMedia label releases.',
+    title: 'Immortal Records Showcase',
+    description: 'Documenting the songwriting and production processes behind the latest Immortal Division label releases.',
     cover_image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80',
     tags: ['Behind the Scenes', 'Songwriting', 'Label'],
     slug: 'records-showcase'
@@ -192,7 +192,7 @@ const mockEpisodes: Episode[] = [
     id: 'ep-1',
     program_id: 'prog-1',
     title: 'Lofi Indie Folk Set: Waves of Autumn (Live)',
-    description: 'An acoustic performance of Waves of Autumn. Recorded live in Evolu Studio Room A with multi-angle capture and custom tube mic preamps.',
+    description: 'An acoustic performance of Waves of Autumn. Recorded live in Immortal Studio Room A with multi-angle capture and custom tube mic preamps.',
     youtube_id: 'coPZJz6b9jM',
     season: 1,
     episode_number: 1,
@@ -204,7 +204,7 @@ const mockEpisodes: Episode[] = [
     id: 'ep-2',
     program_id: 'prog-1',
     title: 'Neon Synthpop Jam - Nightcrawler (Live)',
-    description: 'High energy performance using vintage analog synths and dynamic live drumming. Experience the sound of EvoluMedia live room.',
+    description: 'High energy performance using vintage analog synths and dynamic live drumming. Experience the sound of Immortal Division live room.',
     youtube_id: 'Hq0NkrM4bF8',
     season: 1,
     episode_number: 2,
@@ -253,9 +253,9 @@ const mockEpisodes: Episode[] = [
 const mockArtWorks: ArtWork[] = [
   {
     id: 'art-1',
-    title: 'Evolu Records Showcase Poster',
+    title: 'Immortal Records Showcase Poster',
     artist_name: 'VibrantRed Design',
-    description: 'Limited edition high-density print poster designed for the launch event of Evolu Records.',
+    description: 'Limited edition high-density print poster designed for the launch event of Immortal Records.',
     image_url: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&auto=format&fit=crop&q=80',
     merch_link: 'https://tokopedia.com',
     category: 'Poster Art'
@@ -271,8 +271,8 @@ const mockArtWorks: ArtWork[] = [
   },
   {
     id: 'art-3',
-    title: 'EvoluMedia Logo Tee (Red Edition)',
-    artist_name: 'EvoluMedia Team',
+    title: 'Immortal Division Logo Tee (Red Edition)',
+    artist_name: 'Immortal Division Team',
     description: 'Premium heavyweight cotton street-wear tee with red logo emblem embroidered on chest.',
     image_url: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80',
     merch_link: 'https://tokopedia.com',
@@ -282,7 +282,7 @@ const mockArtWorks: ArtWork[] = [
     id: 'art-4',
     title: 'Vinyl Records Custom Slipmat',
     artist_name: 'Analog Lover',
-    description: 'Custom felt record slipmats featuring full-color EvoluMedia dynamic waves.',
+    description: 'Custom felt record slipmats featuring full-color Immortal Division dynamic waves.',
     image_url: 'https://images.unsplash.com/photo-1539625319135-8d62ac1e58cd?w=800&auto=format&fit=crop&q=80',
     merch_link: 'https://tokopedia.com',
     category: 'Merchandise'
@@ -326,7 +326,7 @@ const mockMusicTracks: MusicTrack[] = [
     id: 'track-3',
     title: 'Acoustic Rain',
     artist: 'Sarah & The Synths',
-    album: 'Evolu Studio Live',
+    album: 'Immortal Studio Live',
     cover_image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&auto=format&fit=crop&q=80',
     audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
     spotify_embed: '<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/1PZj4rM3tC5P9vXy6sWv9v" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>',
@@ -356,7 +356,7 @@ The Indonesian independent music scene has undergone a massive renaissance over 
 Blending hazy shoegaze with lush orchestral synth layers, this Bandung-based quintet sounds like a dream you don't want to wake up from. Their latest EP, *Fading Mirrors*, has gained global attention on Bandcamp.
 
 ### 2. Kurosuke (Jakarta)
-A staple in the modern city-pop revival, Kurosuke mixes infectious baseline rhythms with warm retro synthesizers and romantic lyricism. We recently hosted him in the [Evolu Studio Podcast](/programs/underground-beat), where he broke down his vintage instrumentation.
+A staple in the modern city-pop revival, Kurosuke mixes infectious baseline rhythms with warm retro synthesizers and romantic lyricism. We recently hosted him in the [Immortal Studio Podcast](/programs/underground-beat), where he broke down his vintage instrumentation.
     `
   },
   {
@@ -380,9 +380,9 @@ Analog poly-synths are in a golden era, and Arturia's recent release—the **Pol
 const mockEvents: EventItem[] = [
   {
     id: 'event-1',
-    title: 'Evolu Showcase: Vol. 1 (Jakarta)',
+    title: 'Immortal Showcase: Vol. 1 (Jakarta)',
     description: 'An intimate evening featuring live performances by Luna Eclipse and Retro Runner, followed by an open analog synthesizer jam session.',
-    location: 'Studio Room A, EvoluMedia HQ, Jakarta',
+    location: 'Studio Room A, Immortal Division HQ, Jakarta',
     start_date: '2026-07-25T19:00:00Z',
     end_date: '2026-07-25T23:00:00Z',
     cover_image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80',
@@ -409,9 +409,9 @@ const mockMembersSeed: UserSession[] = [
     id: 'admin-master',
     username: 'master_admin',
     fullName: 'Master Admin',
-    email: 'admin@evolumedia.com',
+    email: 'admin@immortaldivision.com',
     avatarUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80',
-    bio: 'EvoluMedia Chief System Administrator.',
+    bio: 'Immortal Division Chief System Administrator.',
     isLoggedIn: false,
     isAdmin: true
   },
@@ -440,8 +440,8 @@ const mockMembersSeed: UserSession[] = [
 const mockProducts: Product[] = [
   {
     id: 'prod-1',
-    name: 'Evolu Records Oversized Tee',
-    description: 'Kaos oversized katun berat 24s premium berwarna hitam pekat dengan bordir logo merah Evolu di dada depan dan sablon grafis analog waves di punggung.',
+    name: 'Immortal Records Oversized Tee',
+    description: 'Kaos oversized katun berat 24s premium berwarna hitam pekat dengan bordir logo merah Immortal di dada depan dan sablon grafis analog waves di punggung.',
     price: 185000,
     image_url: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80',
     stock: 50,
@@ -460,7 +460,7 @@ const mockProducts: Product[] = [
   },
   {
     id: 'prod-3',
-    name: 'Evolu Dad Cap (Crimson Accent)',
+    name: 'Immortal Dad Cap (Crimson Accent)',
     description: 'Topi katun twill washed dengan pengait logam kuningan di belakang. Logo grafis gelombang suara crimson disulam rapi di sisi depan.',
     price: 120000,
     image_url: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800&auto=format&fit=crop&q=80',
@@ -482,7 +482,7 @@ const mockProducts: Product[] = [
 
 const mockOrdersSeed: Order[] = [
   {
-    id: 'EVO-ORD-882191',
+    id: 'IMM-ORD-882191',
     product_id: 'prod-1',
     buyer_name: 'Joko Prabowo',
     buyer_email: 'joko@gmail.com',
@@ -495,7 +495,7 @@ const mockOrdersSeed: Order[] = [
     created_at: '2026-07-07T12:00:00Z'
   },
   {
-    id: 'EVO-ORD-476291',
+    id: 'IMM-ORD-476291',
     product_id: 'prod-3',
     buyer_name: 'Maya Wijaya',
     buyer_email: 'maya@gmail.com',
@@ -533,15 +533,15 @@ const setLocalStorage = (key: string, value: any) => {
 // Seed LocalStorage helpers (client-side only)
 const seedMockData = () => {
   if (typeof window === 'undefined') return;
-  if (!window.localStorage.getItem('evolu_programs')) setLocalStorage('evolu_programs', mockPrograms);
-  if (!window.localStorage.getItem('evolu_episodes')) setLocalStorage('evolu_episodes', mockEpisodes);
-  if (!window.localStorage.getItem('evolu_artworks')) setLocalStorage('evolu_artworks', mockArtWorks);
-  if (!window.localStorage.getItem('evolu_music')) setLocalStorage('evolu_music', mockMusicTracks);
-  if (!window.localStorage.getItem('evolu_blog')) setLocalStorage('evolu_blog', mockBlogPosts);
-  if (!window.localStorage.getItem('evolu_events')) setLocalStorage('evolu_events', mockEvents);
-  if (!window.localStorage.getItem('evolu_members')) setLocalStorage('evolu_members', mockMembersSeed);
-  if (!window.localStorage.getItem('evolu_products')) setLocalStorage('evolu_products', mockProducts);
-  if (!window.localStorage.getItem('evolu_orders')) setLocalStorage('evolu_orders', mockOrdersSeed);
+  if (!window.localStorage.getItem('immortal_programs')) setLocalStorage('immortal_programs', mockPrograms);
+  if (!window.localStorage.getItem('immortal_episodes')) setLocalStorage('immortal_episodes', mockEpisodes);
+  if (!window.localStorage.getItem('immortal_artworks')) setLocalStorage('immortal_artworks', mockArtWorks);
+  if (!window.localStorage.getItem('immortal_music')) setLocalStorage('immortal_music', mockMusicTracks);
+  if (!window.localStorage.getItem('immortal_blog')) setLocalStorage('immortal_blog', mockBlogPosts);
+  if (!window.localStorage.getItem('immortal_events')) setLocalStorage('immortal_events', mockEvents);
+  if (!window.localStorage.getItem('immortal_members')) setLocalStorage('immortal_members', mockMembersSeed);
+  if (!window.localStorage.getItem('immortal_products')) setLocalStorage('immortal_products', mockProducts);
+  if (!window.localStorage.getItem('immortal_orders')) setLocalStorage('immortal_orders', mockOrdersSeed);
 };
 
 // Execute seeding immediately on module load
@@ -556,7 +556,7 @@ export const getPrograms = async (): Promise<Program[]> => {
     const { data, error } = await supabase.from('programs').select('*');
     if (!error && data) return data;
   }
-  return getLocalStorage('evolu_programs', mockPrograms);
+  return getLocalStorage('immortal_programs', mockPrograms);
 };
 
 export const getProgramBySlug = async (slug: string): Promise<Program | undefined> => {
@@ -564,7 +564,7 @@ export const getProgramBySlug = async (slug: string): Promise<Program | undefine
     const { data, error } = await supabase.from('programs').select('*').eq('slug', slug).single();
     if (!error && data) return data;
   }
-  const progs = getLocalStorage('evolu_programs', mockPrograms);
+  const progs = getLocalStorage('immortal_programs', mockPrograms);
   return progs.find((p: Program) => p.slug === slug);
 };
 
@@ -575,7 +575,7 @@ export const getEpisodes = async (programId?: string): Promise<Episode[]> => {
     const { data, error } = await query;
     if (!error && data) return data as unknown as Episode[];
   }
-  const eps = getLocalStorage('evolu_episodes', mockEpisodes);
+  const eps = getLocalStorage('immortal_episodes', mockEpisodes);
   if (programId) {
     return eps.filter((e: Episode) => e.program_id === programId);
   }
@@ -587,7 +587,7 @@ export const getEpisodeById = async (id: string): Promise<Episode | undefined> =
     const { data, error } = await supabase.from('episodes').select('*').eq('id', id).single();
     if (!error && data) return data as unknown as Episode;
   }
-  const eps = getLocalStorage('evolu_episodes', mockEpisodes);
+  const eps = getLocalStorage('immortal_episodes', mockEpisodes);
   return eps.find((e: Episode) => e.id === id);
 };
 
@@ -596,7 +596,7 @@ export const getArtWorks = async (): Promise<ArtWork[]> => {
     const { data, error } = await supabase.from('art_works').select('*');
     if (!error && data) return data;
   }
-  return getLocalStorage('evolu_artworks', mockArtWorks);
+  return getLocalStorage('immortal_artworks', mockArtWorks);
 };
 
 export const getMusicTracks = async (): Promise<MusicTrack[]> => {
@@ -604,7 +604,7 @@ export const getMusicTracks = async (): Promise<MusicTrack[]> => {
     const { data, error } = await supabase.from('music_tracks').select('*');
     if (!error && data) return data;
   }
-  return getLocalStorage('evolu_music', mockMusicTracks);
+  return getLocalStorage('immortal_music', mockMusicTracks);
 };
 
 export const getBlogPosts = async (): Promise<BlogPost[]> => {
@@ -616,7 +616,7 @@ export const getBlogPosts = async (): Promise<BlogPost[]> => {
       .order('published_at', { ascending: false });
     if (!error && data) return data as unknown as BlogPost[];
   }
-  return getLocalStorage('evolu_blog', mockBlogPosts);
+  return getLocalStorage('immortal_blog', mockBlogPosts);
 };
 
 export const getBlogPostBySlug = async (slug: string): Promise<BlogPost | undefined> => {
@@ -628,7 +628,7 @@ export const getBlogPostBySlug = async (slug: string): Promise<BlogPost | undefi
       .single();
     if (!error && data) return data as unknown as BlogPost;
   }
-  const posts = getLocalStorage('evolu_blog', mockBlogPosts);
+  const posts = getLocalStorage('immortal_blog', mockBlogPosts);
   return posts.find((p: BlogPost) => p.slug === slug);
 };
 
@@ -637,7 +637,7 @@ export const getEvents = async (): Promise<EventItem[]> => {
     const { data, error } = await supabase.from('events').select('*').order('start_date', { ascending: true });
     if (!error && data) return data;
   }
-  return getLocalStorage('evolu_events', mockEvents);
+  return getLocalStorage('immortal_events', mockEvents);
 };
 
 // --- B2B INQUIRIES & NEWSLETTER ---
@@ -647,7 +647,7 @@ export const getInquiries = async (): Promise<Inquiry[]> => {
     const { data, error } = await supabase.from('inquiries').select('*').order('created_at', { ascending: false });
     if (!error && data) return data;
   }
-  return getLocalStorage('evolu_inquiries', []);
+  return getLocalStorage('immortal_inquiries', []);
 };
 
 export const submitInquiry = async (data: Omit<Inquiry, 'id' | 'status' | 'created_at'>): Promise<boolean> => {
@@ -655,14 +655,14 @@ export const submitInquiry = async (data: Omit<Inquiry, 'id' | 'status' | 'creat
     const { error } = await supabase.from('inquiries').insert([data]);
     return !error;
   }
-  const currentInquiries = getLocalStorage('evolu_inquiries', []);
+  const currentInquiries = getLocalStorage('immortal_inquiries', []);
   const newInquiry: Inquiry = {
     ...data,
     id: `inq-${Date.now()}`,
     status: 'Pending',
     created_at: new Date().toISOString()
   };
-  setLocalStorage('evolu_inquiries', [...currentInquiries, newInquiry]);
+  setLocalStorage('immortal_inquiries', [...currentInquiries, newInquiry]);
   return true;
 };
 
@@ -671,9 +671,9 @@ export const updateInquiryStatus = async (id: string, status: string): Promise<b
     const { error } = await supabase.from('inquiries').update({ status }).eq('id', id);
     return !error;
   }
-  const currentInquiries = getLocalStorage('evolu_inquiries', []);
+  const currentInquiries = getLocalStorage('immortal_inquiries', []);
   const updated = currentInquiries.map((inq: Inquiry) => inq.id === id ? { ...inq, status } : inq);
-  setLocalStorage('evolu_inquiries', updated);
+  setLocalStorage('immortal_inquiries', updated);
   return true;
 };
 
@@ -682,9 +682,9 @@ export const deleteInquiry = async (id: string): Promise<boolean> => {
     const { error } = await supabase.from('inquiries').delete().eq('id', id);
     return !error;
   }
-  const currentInquiries = getLocalStorage('evolu_inquiries', []);
+  const currentInquiries = getLocalStorage('immortal_inquiries', []);
   const filtered = currentInquiries.filter((inq: Inquiry) => inq.id !== id);
-  setLocalStorage('evolu_inquiries', filtered);
+  setLocalStorage('immortal_inquiries', filtered);
   return true;
 };
 
@@ -693,9 +693,9 @@ export const subscribeNewsletter = async (email: string): Promise<boolean> => {
     const { error } = await supabase.from('newsletter_subscribers').insert([{ email }]);
     return !error;
   }
-  const subscribers = getLocalStorage('evolu_newsletter', []);
+  const subscribers = getLocalStorage('immortal_newsletter', []);
   if (!subscribers.includes(email)) {
-    setLocalStorage('evolu_newsletter', [...subscribers, email]);
+    setLocalStorage('immortal_newsletter', [...subscribers, email]);
   }
   return true;
 };
@@ -744,7 +744,7 @@ export const getComments = async (target: { episodeId?: string; postId?: string 
       created_at: '2026-06-11T16:05:00Z'
     }
   ];
-  const allComments = getLocalStorage('evolu_comments', defaultComments);
+  const allComments = getLocalStorage('immortal_comments', defaultComments);
   if (target.episodeId) {
     return allComments.filter((c: Comment) => c.episode_id === target.episodeId);
   }
@@ -785,7 +785,7 @@ export const addComment = async (commentData: {
   }
   
   const defaultComments: Comment[] = [];
-  const allComments = getLocalStorage('evolu_comments', defaultComments);
+  const allComments = getLocalStorage('immortal_comments', defaultComments);
   const newComment: Comment = {
     id: `comm-${Date.now()}`,
     user_id: commentData.userId,
@@ -798,7 +798,7 @@ export const addComment = async (commentData: {
   };
   
   const updatedComments = [...allComments, newComment];
-  setLocalStorage('evolu_comments', updatedComments);
+  setLocalStorage('immortal_comments', updatedComments);
   return newComment;
 };
 
@@ -809,7 +809,7 @@ export const getProducts = async (): Promise<Product[]> => {
     const { data, error } = await supabase.from('products').select('*');
     if (!error && data) return data;
   }
-  return getLocalStorage('evolu_products', mockProducts);
+  return getLocalStorage('immortal_products', mockProducts);
 };
 
 export const getProductById = async (id: string): Promise<Product | undefined> => {
@@ -817,24 +817,24 @@ export const getProductById = async (id: string): Promise<Product | undefined> =
     const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
     if (!error && data) return data;
   }
-  const prods = getLocalStorage('evolu_products', mockProducts);
+  const prods = getLocalStorage('immortal_products', mockProducts);
   return prods.find((p: Product) => p.id === id);
 };
 
 export const addProduct = async (data: Omit<Product, 'id'>): Promise<Product> => {
-  const list = getLocalStorage('evolu_products', mockProducts);
+  const list = getLocalStorage('immortal_products', mockProducts);
   const newProd: Product = {
     ...data,
     id: `prod-${Date.now()}`
   };
-  setLocalStorage('evolu_products', [...list, newProd]);
+  setLocalStorage('immortal_products', [...list, newProd]);
   return newProd;
 };
 
 export const deleteProduct = async (id: string): Promise<boolean> => {
-  const list = getLocalStorage('evolu_products', mockProducts);
+  const list = getLocalStorage('immortal_products', mockProducts);
   const filtered = list.filter((p: Product) => p.id !== id);
-  setLocalStorage('evolu_products', filtered);
+  setLocalStorage('immortal_products', filtered);
   return true;
 };
 
@@ -851,8 +851,8 @@ export const getOrders = async (): Promise<Order[]> => {
     }
   }
   
-  const ords = getLocalStorage('evolu_orders', mockOrdersSeed);
-  const prods = getLocalStorage('evolu_products', mockProducts);
+  const ords = getLocalStorage('immortal_orders', mockOrdersSeed);
+  const prods = getLocalStorage('immortal_products', mockProducts);
   return ords.map((o: Order) => {
     const p = prods.find((p: Product) => p.id === o.product_id);
     return {
@@ -863,7 +863,7 @@ export const getOrders = async (): Promise<Order[]> => {
 };
 
 export const placeOrder = async (data: Omit<Order, 'id' | 'payment_status' | 'created_at'>): Promise<string> => {
-  const orderId = `EVO-ORD-${Math.floor(100000 + Math.random() * 900000)}`;
+  const orderId = `IMM-ORD-${Math.floor(100000 + Math.random() * 900000)}`;
   
   if (isSupabaseConfigured && supabase) {
     const { error } = await supabase.from('orders').insert([{
@@ -881,17 +881,17 @@ export const placeOrder = async (data: Omit<Order, 'id' | 'payment_status' | 'cr
     if (!error) return orderId;
   }
 
-  const list = getLocalStorage('evolu_orders', mockOrdersSeed);
+  const list = getLocalStorage('immortal_orders', mockOrdersSeed);
   const newOrder: Order = {
     ...data,
     id: orderId,
     payment_status: 'Pending',
     created_at: new Date().toISOString()
   };
-  setLocalStorage('evolu_orders', [...list, newOrder]);
+  setLocalStorage('immortal_orders', [...list, newOrder]);
   
   // Deduct product stock
-  const prods = getLocalStorage('evolu_products', mockProducts);
+  const prods = getLocalStorage('immortal_products', mockProducts);
   const updatedProds = prods.map((p: Product) => {
     if (p.id === data.product_id) {
       return {
@@ -901,7 +901,7 @@ export const placeOrder = async (data: Omit<Order, 'id' | 'payment_status' | 'cr
     }
     return p;
   });
-  setLocalStorage('evolu_products', updatedProds);
+  setLocalStorage('immortal_products', updatedProds);
 
   return orderId;
 };
@@ -911,9 +911,9 @@ export const updateOrderStatus = async (id: string, status: string): Promise<boo
     const { error } = await supabase.from('orders').update({ payment_status: status }).eq('id', id);
     return !error;
   }
-  const list = getLocalStorage('evolu_orders', mockOrdersSeed);
+  const list = getLocalStorage('immortal_orders', mockOrdersSeed);
   const updated = list.map((o: Order) => o.id === id ? { ...o, payment_status: status } : o);
-  setLocalStorage('evolu_orders', updated);
+  setLocalStorage('immortal_orders', updated);
   return true;
 };
 
@@ -922,9 +922,9 @@ export const deleteOrder = async (id: string): Promise<boolean> => {
     const { error } = await supabase.from('orders').delete().eq('id', id);
     return !error;
   }
-  const list = getLocalStorage('evolu_orders', mockOrdersSeed);
+  const list = getLocalStorage('immortal_orders', mockOrdersSeed);
   const filtered = list.filter((o: Order) => o.id !== id);
-  setLocalStorage('evolu_orders', filtered);
+  setLocalStorage('immortal_orders', filtered);
   return true;
 };
 
@@ -942,7 +942,7 @@ const defaultSession: UserSession = {
 };
 
 export const getCurrentUserSession = (): UserSession => {
-  return getLocalStorage('evolu_session', defaultSession);
+  return getLocalStorage('immortal_session', defaultSession);
 };
 
 export const signUpMock = (username: string, fullName: string, email: string, bio: string): UserSession => {
@@ -952,11 +952,11 @@ export const signUpMock = (username: string, fullName: string, email: string, bi
     fullName,
     email,
     avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    bio: bio || 'EvoluMedia music enthusiast.',
+    bio: bio || 'Immortal Division music enthusiast.',
     isLoggedIn: true,
     isAdmin: false
   };
-  setLocalStorage('evolu_session', newSession);
+  setLocalStorage('immortal_session', newSession);
   
   // Register in list
   addMemberToMockList(newSession);
@@ -965,7 +965,7 @@ export const signUpMock = (username: string, fullName: string, email: string, bi
 
 export const loginMock = (email: string, password?: string): UserSession => {
   // Check master admin credentials
-  if (email === 'admin@evolumedia.com') {
+  if (email === 'admin@immortaldivision.com') {
     if (password !== 'PastiSukses') {
       throw new Error('Password Master Admin salah!');
     }
@@ -973,19 +973,19 @@ export const loginMock = (email: string, password?: string): UserSession => {
       id: 'admin-master',
       username: 'master_admin',
       fullName: 'Master Admin',
-      email: 'admin@evolumedia.com',
+      email: 'admin@immortaldivision.com',
       avatarUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80',
-      bio: 'EvoluMedia Chief System Administrator.',
+      bio: 'Immortal Division Chief System Administrator.',
       isLoggedIn: true,
       isAdmin: true
     };
-    setLocalStorage('evolu_session', adminSession);
+    setLocalStorage('immortal_session', adminSession);
     addMemberToMockList(adminSession);
     return adminSession;
   }
 
   // Check if member already exists in local list
-  const members = getLocalStorage('evolu_members', mockMembersSeed);
+  const members = getLocalStorage('immortal_members', mockMembersSeed);
   const found = members.find((m: UserSession) => m.email === email);
   
   let newSession: UserSession;
@@ -998,7 +998,7 @@ export const loginMock = (email: string, password?: string): UserSession => {
     // Fallback automatic signin
     newSession = {
       id: `user-${Date.now()}`,
-      username: 'evolu_listener',
+      username: 'immortal_listener',
       fullName: 'Joko Prabowo',
       email: email,
       avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
@@ -1009,45 +1009,45 @@ export const loginMock = (email: string, password?: string): UserSession => {
     addMemberToMockList(newSession);
   }
 
-  setLocalStorage('evolu_session', newSession);
+  setLocalStorage('immortal_session', newSession);
   return newSession;
 };
 
 export const updateProfileMock = (data: Partial<Omit<UserSession, 'id' | 'isLoggedIn'>>): UserSession => {
   const current = getCurrentUserSession();
   const updated = { ...current, ...data };
-  setLocalStorage('evolu_session', updated);
+  setLocalStorage('immortal_session', updated);
   
   // Sync to members list
-  const members = getLocalStorage('evolu_members', mockMembersSeed);
+  const members = getLocalStorage('immortal_members', mockMembersSeed);
   const syncedMembers = members.map((m: UserSession) => m.id === current.id ? { ...m, ...data } : m);
-  setLocalStorage('evolu_members', syncedMembers);
+  setLocalStorage('immortal_members', syncedMembers);
 
   return updated;
 };
 
 export const logoutMock = (): void => {
-  setLocalStorage('evolu_session', defaultSession);
+  setLocalStorage('immortal_session', defaultSession);
 };
 
 // --- ADMIN SPECIFIC MUTATIONS ---
 
 // 1. Members Management
 export const getMembersList = async (): Promise<UserSession[]> => {
-  return getLocalStorage('evolu_members', mockMembersSeed);
+  return getLocalStorage('immortal_members', mockMembersSeed);
 };
 
 export const addMemberToMockList = (user: UserSession) => {
-  const members = getLocalStorage('evolu_members', mockMembersSeed);
+  const members = getLocalStorage('immortal_members', mockMembersSeed);
   const exists = members.find((m: UserSession) => m.email === user.email || m.id === user.id);
   if (!exists) {
     const listUser = { ...user, isLoggedIn: false }; // Don't persist logged-in state inside list
-    setLocalStorage('evolu_members', [...members, listUser]);
+    setLocalStorage('immortal_members', [...members, listUser]);
   }
 };
 
 export const createAdminAccount = async (data: Omit<UserSession, 'id' | 'isLoggedIn' | 'isAdmin'>): Promise<boolean> => {
-  const members = getLocalStorage('evolu_members', mockMembersSeed);
+  const members = getLocalStorage('immortal_members', mockMembersSeed);
   const exists = members.find((m: UserSession) => m.email === data.email);
   if (exists) return false;
 
@@ -1057,14 +1057,14 @@ export const createAdminAccount = async (data: Omit<UserSession, 'id' | 'isLogge
     isLoggedIn: false,
     isAdmin: true
   };
-  setLocalStorage('evolu_members', [...members, newAdmin]);
+  setLocalStorage('immortal_members', [...members, newAdmin]);
   return true;
 };
 
 export const deleteMember = async (id: string): Promise<boolean> => {
-  const members = getLocalStorage('evolu_members', mockMembersSeed);
+  const members = getLocalStorage('immortal_members', mockMembersSeed);
   const filtered = members.filter((m: UserSession) => m.id !== id);
-  setLocalStorage('evolu_members', filtered);
+  setLocalStorage('immortal_members', filtered);
   
   // If active user is deleted, force logout
   const active = getCurrentUserSession();
@@ -1075,137 +1075,137 @@ export const deleteMember = async (id: string): Promise<boolean> => {
 };
 
 export const toggleAdminPrivilege = async (id: string): Promise<boolean> => {
-  const members = getLocalStorage('evolu_members', mockMembersSeed);
+  const members = getLocalStorage('immortal_members', mockMembersSeed);
   const updated = members.map((m: UserSession) => m.id === id ? { ...m, isAdmin: !m.isAdmin } : m);
-  setLocalStorage('evolu_members', updated);
+  setLocalStorage('immortal_members', updated);
 
   // Sync to active session if matching
   const active = getCurrentUserSession();
   if (active.id === id) {
     const activeUpdated = { ...active, isAdmin: !active.isAdmin };
-    setLocalStorage('evolu_session', activeUpdated);
+    setLocalStorage('immortal_session', activeUpdated);
   }
   return true;
 };
 
 // 2. Program CRUD
 export const addProgram = async (data: Omit<Program, 'id'>): Promise<Program> => {
-  const list = getLocalStorage('evolu_programs', mockPrograms);
+  const list = getLocalStorage('immortal_programs', mockPrograms);
   const newProg: Program = {
     ...data,
     id: `prog-${Date.now()}`,
     slug: data.slug || data.title.toLowerCase().replace(/\s+/g, '-')
   };
-  setLocalStorage('evolu_programs', [...list, newProg]);
+  setLocalStorage('immortal_programs', [...list, newProg]);
   return newProg;
 };
 
 export const deleteProgram = async (id: string): Promise<boolean> => {
-  const list = getLocalStorage('evolu_programs', mockPrograms);
+  const list = getLocalStorage('immortal_programs', mockPrograms);
   const filtered = list.filter((p: Program) => p.id !== id);
-  setLocalStorage('evolu_programs', filtered);
+  setLocalStorage('immortal_programs', filtered);
 
   // Cascade delete episodes
-  const eps = getLocalStorage('evolu_episodes', mockEpisodes);
+  const eps = getLocalStorage('immortal_episodes', mockEpisodes);
   const filteredEps = eps.filter((e: Episode) => e.program_id !== id);
-  setLocalStorage('evolu_episodes', filteredEps);
+  setLocalStorage('immortal_episodes', filteredEps);
   
   return true;
 };
 
 // 3. Episode CRUD
 export const addEpisode = async (data: Omit<Episode, 'id' | 'published_at'>): Promise<Episode> => {
-  const list = getLocalStorage('evolu_episodes', mockEpisodes);
+  const list = getLocalStorage('immortal_episodes', mockEpisodes);
   const newEp: Episode = {
     ...data,
     id: `ep-${Date.now()}`,
     published_at: new Date().toISOString()
   };
-  setLocalStorage('evolu_episodes', [...list, newEp]);
+  setLocalStorage('immortal_episodes', [...list, newEp]);
   return newEp;
 };
 
 export const deleteEpisode = async (id: string): Promise<boolean> => {
-  const list = getLocalStorage('evolu_episodes', mockEpisodes);
+  const list = getLocalStorage('immortal_episodes', mockEpisodes);
   const filtered = list.filter((e: Episode) => e.id !== id);
-  setLocalStorage('evolu_episodes', filtered);
+  setLocalStorage('immortal_episodes', filtered);
   return true;
 };
 
 // 4. Music CRUD
 export const addMusicTrack = async (data: Omit<MusicTrack, 'id'>): Promise<MusicTrack> => {
-  const list = getLocalStorage('evolu_music', mockMusicTracks);
+  const list = getLocalStorage('immortal_music', mockMusicTracks);
   const newTrack: MusicTrack = {
     ...data,
     id: `track-${Date.now()}`
   };
-  setLocalStorage('evolu_music', [...list, newTrack]);
+  setLocalStorage('immortal_music', [...list, newTrack]);
   return newTrack;
 };
 
 export const deleteMusicTrack = async (id: string): Promise<boolean> => {
-  const list = getLocalStorage('evolu_music', mockMusicTracks);
+  const list = getLocalStorage('immortal_music', mockMusicTracks);
   const filtered = list.filter((t: MusicTrack) => t.id !== id);
-  setLocalStorage('evolu_music', filtered);
+  setLocalStorage('immortal_music', filtered);
   return true;
 };
 
 // 5. Artwork CRUD
 export const addArtWork = async (data: Omit<ArtWork, 'id'>): Promise<ArtWork> => {
-  const list = getLocalStorage('evolu_artworks', mockArtWorks);
+  const list = getLocalStorage('immortal_artworks', mockArtWorks);
   const newArt: ArtWork = {
     ...data,
     id: `art-${Date.now()}`
   };
-  setLocalStorage('evolu_artworks', [...list, newArt]);
+  setLocalStorage('immortal_artworks', [...list, newArt]);
   return newArt;
 };
 
 export const deleteArtWork = async (id: string): Promise<boolean> => {
-  const list = getLocalStorage('evolu_artworks', mockArtWorks);
+  const list = getLocalStorage('immortal_artworks', mockArtWorks);
   const filtered = list.filter((a: ArtWork) => a.id !== id);
-  setLocalStorage('evolu_artworks', filtered);
+  setLocalStorage('immortal_artworks', filtered);
   return true;
 };
 
 // 6. Blog CRUD
 export const addBlogPost = async (data: Omit<BlogPost, 'id' | 'published_at' | 'author'> & { authorName: string }): Promise<BlogPost> => {
-  const list = getLocalStorage('evolu_blog', mockBlogPosts);
+  const list = getLocalStorage('immortal_blog', mockBlogPosts);
   const newPost: BlogPost = {
     ...data,
     id: `post-${Date.now()}`,
     slug: data.slug || data.title.toLowerCase().replace(/\s+/g, '-'),
     published_at: new Date().toISOString(),
     author: {
-      full_name: data.authorName || 'Evolu Admin',
+      full_name: data.authorName || 'Immortal Admin',
       avatar_url: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&auto=format&fit=crop&q=80'
     }
   };
-  setLocalStorage('evolu_blog', [...list, newPost]);
+  setLocalStorage('immortal_blog', [...list, newPost]);
   return newPost;
 };
 
 export const deleteBlogPost = async (id: string): Promise<boolean> => {
-  const list = getLocalStorage('evolu_blog', mockBlogPosts);
+  const list = getLocalStorage('immortal_blog', mockBlogPosts);
   const filtered = list.filter((p: BlogPost) => p.id !== id);
-  setLocalStorage('evolu_blog', filtered);
+  setLocalStorage('immortal_blog', filtered);
   return true;
 };
 
 // 7. Event CRUD
 export const addEvent = async (data: Omit<EventItem, 'id'>): Promise<EventItem> => {
-  const list = getLocalStorage('evolu_events', mockEvents);
+  const list = getLocalStorage('immortal_events', mockEvents);
   const newEvent: EventItem = {
     ...data,
     id: `event-${Date.now()}`
   };
-  setLocalStorage('evolu_events', [...list, newEvent]);
+  setLocalStorage('immortal_events', [...list, newEvent]);
   return newEvent;
 };
 
 export const deleteEvent = async (id: string): Promise<boolean> => {
-  const list = getLocalStorage('evolu_events', mockEvents);
+  const list = getLocalStorage('immortal_events', mockEvents);
   const filtered = list.filter((e: EventItem) => e.id !== id);
-  setLocalStorage('evolu_events', filtered);
+  setLocalStorage('immortal_events', filtered);
   return true;
 };

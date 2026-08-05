@@ -1,4 +1,4 @@
--- EvoluMedia Database Schema SQL (Supabase PostgreSQL)
+-- Immortal Division Database Schema SQL (Supabase PostgreSQL)
 
 -- 1. Profiles Table (linked to Supabase Auth)
 CREATE TABLE IF NOT EXISTS public.profiles (
@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS public.episodes (
 CREATE TABLE IF NOT EXISTS public.art_works (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
-    artist_name VARCHAR(255) DEFAULT 'EvoluMedia Team',
+    artist_name VARCHAR(255) DEFAULT 'Immortal Division Team',
     description TEXT,
     image_url TEXT NOT NULL,
     merch_link TEXT, -- Optional redirect if it is a merch item

@@ -32,14 +32,14 @@ export const Footer: React.FC = () => {
           <div className="space-y-4 md:col-span-2">
             <Link href="/" className="flex items-center gap-2">
               <span className="flex h-8 w-8 items-center justify-center rounded bg-primary font-black text-sm text-white">
-                E
+                I
               </span>
               <span className="font-sans text-xl font-black uppercase tracking-wider text-white">
-                Evolu<span className="text-primary">Media</span>
+                Immortal<span className="text-primary">Division</span>
               </span>
             </Link>
             <p className="max-w-sm text-sm text-muted">
-              Mewadahi ekosistem musik independen, sub-kultur urban, dan seni digital. EvoluMedia mengonsolidasikan karya, program audio-visual, berita, jurnalisme musik, dan interaksi komunitas.
+              Mewadahi ekosistem musik independen, sub-kultur urban, dan seni digital. Immortal Division mengonsolidasikan karya, program audio-visual, berita, jurnalisme musik, dan interaksi komunitas.
             </p>
             {/* Social Icons */}
             <div className="flex items-center gap-4 pt-2">
@@ -139,7 +139,7 @@ export const Footer: React.FC = () => {
 
         {/* Bottom bar */}
         <div className="mt-12 border-t border-white/5 pt-8 text-center text-xs text-neutral-600">
-          <p>© {new Date().getFullYear()} EvoluMedia Portal. All Rights Reserved. Built with Next.js & Tailwind CSS.</p>
+          <p>© {new Date().getFullYear()} Immortal Division Portal. All Rights Reserved. Built with Next.js & Tailwind CSS.</p>
         </div>
       </div>
     </footer>

@@ -108,8 +108,8 @@ export default function StorePage() {
       setOrderSuccessId(orderId);
       
       // WhatsApp redirect link compile
-      const waNumber = '628123456789'; // EvoluMedia store WA
-      const waText = `Halo EvoluMedia Store, saya ingin konfirmasi pembayaran untuk pesanan merchandise berikut:
+      const waNumber = '628123456789'; // Immortal Division store WA
+      const waText = `Halo Immortal Division Store, saya ingin konfirmasi pembayaran untuk pesanan merchandise berikut:
 
 Order ID: ${orderId}
 Nama: ${buyerName}
@@ -165,7 +165,7 @@ Saya telah melakukan transfer ke rekening BCA. Berikut saya kirimkan juga bukti 
             transition={{ delay: 0.1 }}
             className="mt-2 text-4xl font-black uppercase tracking-tight text-white sm:text-6xl"
           >
-            EVOLU <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-stroke-red text-transparent">STORE</span>
+            IMMORTAL <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-stroke-red text-transparent">STORE</span>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 10 }}
@@ -173,7 +173,7 @@ Saya telah melakukan transfer ke rekening BCA. Berikut saya kirimkan juga bukti 
             transition={{ delay: 0.2 }}
             className="mx-auto mt-4 max-w-2xl text-lg text-muted md:mx-0"
           >
-            Miliki merchandise eksklusif EvoluMedia—kaos oversized, jaket windbreaker, topi, kargo celana, dan aksesoris audio premium lainnya.
+            Miliki merchandise eksklusif Immortal Division—kaos oversized, jaket windbreaker, topi, kargo celana, dan aksesoris audio premium lainnya.
           </motion.p>
         </div>
 
@@ -470,7 +470,7 @@ Saya telah melakukan transfer ke rekening BCA. Berikut saya kirimkan juga bukti 
                       <div className="bg-black/60 rounded-xl p-3 border border-white/5 font-mono space-y-1">
                         <p className="text-[10px] text-muted uppercase">Bank Transfer</p>
                         <p className="text-sm font-bold text-white">BCA: 123-456-7890</p>
-                        <p className="text-[10px] text-white/80">a/n PT EvoluMedia Studio</p>
+                        <p className="text-[10px] text-white/80">a/n PT Immortal Division Studio</p>
                       </div>
                     </div>
 

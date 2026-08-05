@@ -57,7 +57,7 @@ export default function ProgramsPage() {
             transition={{ delay: 0.2 }}
             className="mx-auto mt-4 max-w-2xl text-lg text-muted md:mx-0"
           >
-            Temukan katalog acara video original buatan tim EvoluMedia. Diatur secara rapi berdasarkan program, season, dan indeks episode.
+            Temukan katalog acara video original buatan tim Immortal Division. Diatur secara rapi berdasarkan program, season, dan indeks episode.
           </motion.p>
         </div>
 

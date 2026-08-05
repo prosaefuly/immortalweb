@@ -127,7 +127,7 @@ export default function GalleryPage() {
               <div className="space-y-6 lg:col-span-7">
                 <div className="rounded-3xl border border-white/5 bg-[#08080a] p-6 md:p-8 space-y-6">
                   <div>
-                    <h2 className="text-lg font-black uppercase tracking-widest text-white">Evolu Originals Playlist</h2>
+                    <h2 className="text-lg font-black uppercase tracking-widest text-white">Immortal Originals Playlist</h2>
                     <p className="text-xs text-muted mt-1">Klik play untuk mendengarkan langsung di player web atau buka platform streaming digital.</p>
                   </div>
 

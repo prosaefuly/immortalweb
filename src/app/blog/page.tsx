@@ -76,7 +76,7 @@ export default function BlogListingPage() {
             transition={{ delay: 0.1 }}
             className="mt-2 text-4xl font-black uppercase tracking-tight text-white sm:text-6xl"
           >
-            EVOLU <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-stroke-red text-transparent">JOURNAL</span>
+            IMMORTAL <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-stroke-red text-transparent">JOURNAL</span>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 10 }}

@@ -83,7 +83,7 @@ export default function MemberPage() {
             <div className="mb-6 text-center">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-3 py-1 text-xs font-black uppercase tracking-wider text-primary">
                 <Sparkles size={12} className="animate-pulse" />
-                <span>EvoluMedia Club</span>
+                <span>Immortal Division Club</span>
               </span>
               <h1 className="mt-2 text-3xl font-black uppercase tracking-wider text-white">
                 MEMBER ZONE

@@ -200,7 +200,7 @@ export const AudioPlayer: React.FC = () => {
 
               {/* Footer */}
               <div className="mt-4 text-center text-[10px] text-muted tracking-wider uppercase border-t border-white/5 pt-3">
-                Lyrics provided by EvoluMedia Music.
+                Lyrics provided by Immortal Division Music.
               </div>
             </motion.div>
           </div>

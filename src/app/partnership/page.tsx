@@ -51,7 +51,7 @@ export default function PartnershipPage() {
 
   const handleMediaKitDownload = () => {
     // Mock downloading file by opening a text file or triggering a download notice
-    alert('EvoluMedia Media Kit PDF (2026 Edition) has been generated & downloaded successfully!');
+    alert('Immortal Division Media Kit PDF (2026 Edition) has been generated & downloaded successfully!');
   };
 
   return (
@@ -77,7 +77,7 @@ export default function PartnershipPage() {
             transition={{ delay: 0.1 }}
             className="mt-2 text-4xl font-black uppercase tracking-tight text-white sm:text-6xl"
           >
-            COLLABORATE WITH <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-stroke-red text-transparent">EVOLU</span>
+            COLLABORATE WITH <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-stroke-red text-transparent">IMMORTAL</span>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 10 }}
@@ -97,7 +97,7 @@ export default function PartnershipPage() {
             
             {/* Promo Pitch Box */}
             <div className="rounded-3xl border border-white/5 bg-[#08080a] p-6 md:p-8 space-y-4">
-              <h3 className="text-xl font-bold text-white">Kenapa Bermitra dengan EvoluMedia?</h3>
+              <h3 className="text-xl font-bold text-white">Kenapa Bermitra dengan Immortal Division?</h3>
               <p className="text-sm text-neutral-400 leading-relaxed">
                 Kami membangun ekosistem jurnalisme dan video musik terkurasi dengan audiens yang berfokus pada demografi urban, tech-savvy, dan pendukung produk kreatif.
               </p>
@@ -120,7 +120,7 @@ export default function PartnershipPage() {
 
             {/* Media Kit Download Banner */}
             <div className="rounded-3xl border border-primary/20 bg-gradient-to-r from-red-950/20 via-black to-neutral-900/40 p-6 md:p-8 glass-red shadow-xl space-y-4">
-              <h3 className="text-lg font-bold text-white">EvoluMedia Media Kit 2026</h3>
+              <h3 className="text-lg font-bold text-white">Immortal Division Media Kit 2026</h3>
               <p className="text-xs text-neutral-400">
                 Unduh presentasi deck kami berisi demografi audiens lengkap, rate card iklan, paket sponsorship event, dan studi kasus kemitraan kami.
               </p>

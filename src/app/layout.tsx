@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EvoluMedia | Portal Musik & Pop-Culture Modern",
-  description: "EvoluMedia adalah portal media independen yang mengonsolidasikan program YouTube, rilis lagu, galeri seni digital, berita musik urban, dan komunitas member.",
+  title: "Immortal Division | Portal Musik & Pop-Culture Modern",
+  description: "Immortal Division adalah portal media independen yang mengonsolidasikan program YouTube, rilis lagu, galeri seni digital, berita musik urban, dan komunitas member.",
 };
 
 export default function RootLayout({
