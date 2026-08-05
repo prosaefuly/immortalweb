@@ -32,7 +32,7 @@ export const Footer: React.FC = () => {
           <div className="space-y-4 md:col-span-2">
             <Link href="/" className="flex items-center">
               <img
-                src="/logo.jpg"
+                src="/logo.png"
                 alt="Immortal Division Logo"
                 className="h-8 w-auto object-contain"
               />

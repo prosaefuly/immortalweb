@@ -36,7 +36,7 @@ export const Navbar: React.FC = () => {
           <div className="flex items-center">
             <Link href="/" onClick={handleLinkClick} className="group flex items-center">
               <img
-                src="/logo.jpg"
+                src="/logo.png"
                 alt="Immortal Division Logo"
                 className="h-10 w-auto object-contain transition-transform group-hover:scale-105 active:scale-95"
               />
