@@ -3,16 +3,16 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useApp } from '@/context/AppContext';
-import { 
-  getPrograms, 
-  getEpisodes, 
-  getBlogPosts, 
-  getEvents, 
+import {
+  getPrograms,
+  getEpisodes,
+  getBlogPosts,
+  getEvents,
   getMusicTracks,
   getProducts,
-  Program, 
-  Episode, 
-  BlogPost, 
+  Program,
+  Episode,
+  BlogPost,
   EventItem,
   MusicTrack,
   Product
@@ -62,7 +62,7 @@ export default function HomePage() {
 
   return (
     <div className="bg-grid min-h-screen pb-16">
-      
+
       {/* 1. HERO SECTION */}
       <section className="relative overflow-hidden pt-20 pb-28 md:pt-32 md:pb-40">
         {/* Glow Spheres */}
@@ -71,7 +71,7 @@ export default function HomePage() {
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12">
-            
+
             {/* Hero Left Text */}
             <div className="space-y-6 lg:col-span-7">
               <motion.div
@@ -81,7 +81,7 @@ export default function HomePage() {
                 className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/15 py-1 px-4 text-xs font-semibold uppercase tracking-widest text-primary"
               >
                 <Sparkles size={12} className="animate-spin" />
-                <span>Indie Sub-culture Hub</span>
+                <span>Immortal Division</span>
               </motion.div>
 
               <motion.h1
@@ -90,8 +90,8 @@ export default function HomePage() {
                 transition={{ duration: 0.7, delay: 0.1 }}
                 className="font-sans text-5xl font-black uppercase tracking-tight text-white sm:text-7xl"
               >
-                WE LOUD <br />
-                THE <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-stroke-red text-transparent">SUB-CULTURE</span>
+                IMMORTAL<br />
+                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-stroke-red text-transparent">DIVISION</span>
               </motion.h1>
 
               <motion.p
@@ -100,7 +100,7 @@ export default function HomePage() {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="max-w-xl text-lg text-neutral-400"
               >
-                Immortal Division mengonsolidasikan karya, kurasi rilisan musik independen, program live studio, jurnalisme tajam, serta event komunitas eksklusif.
+                Immortal Division adalah sebuah wadah yang akan membahas, musik seni budaya dan olahraga-olahraga extreme yang ada di seluruh jagat raya.
               </motion.p>
 
               {/* Action Buttons */}
@@ -117,7 +117,7 @@ export default function HomePage() {
                   <Video size={18} />
                   <span>Watch Programs</span>
                 </Link>
-                
+
                 {featuredTrack && (
                   <button
                     onClick={() => playTrack(featuredTrack)}
@@ -143,7 +143,7 @@ export default function HomePage() {
                   alt="Vision Dominate Banner"
                   className="h-[300px] w-full rounded-2xl object-contain bg-black sm:h-[400px]"
                 />
-                
+
                 {/* Floating overlays */}
                 <div className="absolute right-6 bottom-6 flex items-center gap-2 rounded-xl bg-black/80 px-4 py-2 text-xs font-bold text-white border border-white/5 backdrop-blur-md">
                   <Flame size={12} className="text-primary animate-pulse" />
@@ -159,7 +159,7 @@ export default function HomePage() {
       {/* 2. LATEST YOUTUBE EPISODES SECTION */}
       <section className="py-20 border-t border-white/5 bg-black/40">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          
+
           <div className="mb-12 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
               <span className="text-xs font-black uppercase tracking-widest text-primary">Youtube Channel</span>
@@ -200,7 +200,7 @@ export default function HomePage() {
                       className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                    
+
                     {/* Duration badge */}
                     <span className="absolute right-3 bottom-3 rounded bg-black/80 px-2 py-0.5 font-mono text-[10px] text-white">
                       {ep.duration}
@@ -244,7 +244,7 @@ export default function HomePage() {
       {/* 3. TRENDING BLOGS & NEWS */}
       <section className="py-20 border-t border-white/5">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          
+
           <div className="mb-12 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
               <span className="text-xs font-black uppercase tracking-widest text-primary">Trending Articles</span>
@@ -271,9 +271,8 @@ export default function HomePage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: idx * 0.1 }}
-                  className={`group relative flex flex-col overflow-hidden rounded-3xl border border-white/5 bg-[#09090b] transition duration-300 hover:border-primary/20 ${
-                    isLarge ? 'lg:col-span-7' : 'lg:col-span-5'
-                  }`}
+                  className={`group relative flex flex-col overflow-hidden rounded-3xl border border-white/5 bg-[#09090b] transition duration-300 hover:border-primary/20 ${isLarge ? 'lg:col-span-7' : 'lg:col-span-5'
+                    }`}
                 >
                   <Link href={`/blog/${post.slug}`} className="relative block aspect-[1.85] w-full overflow-hidden">
                     <img
@@ -282,7 +281,7 @@ export default function HomePage() {
                       className="h-full w-full object-cover transition duration-500 group-hover:scale-102"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent" />
-                    
+
                     {/* Category tag */}
                     <span className="absolute top-4 left-4 rounded bg-primary py-0.5 px-2 text-[9px] font-black uppercase tracking-wider text-white">
                       {post.category}
@@ -296,7 +295,7 @@ export default function HomePage() {
                     <p className="mt-2 text-sm text-neutral-400 line-clamp-2">
                       {post.excerpt}
                     </p>
-                    
+
                     {/* Author block */}
                     <div className="mt-auto flex items-center gap-3 pt-6 border-t border-white/5">
                       <img
@@ -328,7 +327,7 @@ export default function HomePage() {
             className="rounded-3xl border border-primary/20 bg-gradient-to-r from-red-950/20 via-black to-neutral-900/50 p-8 md:p-12 glass-red shadow-xl text-center relative overflow-hidden"
           >
             <div className="pointer-events-none absolute top-0 left-0 h-[200px] w-[200px] rounded-full bg-primary/10 blur-[80px]" />
-            
+
             <div className="relative z-10 mx-auto max-w-2xl space-y-6">
               <span className="text-xs font-black uppercase tracking-widest text-primary">Member Area</span>
               <h2 className="text-3xl font-extrabold uppercase tracking-tight text-white md:text-5xl">
@@ -337,7 +336,7 @@ export default function HomePage() {
               <p className="text-base text-neutral-300">
                 Dapatkan akses langsung ke konten video eksklusif member, diskusikan rilisan musik di kolom diskusi, bagikan karya senimu, dan terima newsletter mingguan khusus.
               </p>
-              
+
               {!user.isLoggedIn ? (
                 <button
                   onClick={() => setShowAuthModal(true)}
@@ -361,7 +360,7 @@ export default function HomePage() {
       {/* 5. MERCHANDISE STORE PREVIEW HIGHLIGHT */}
       <section className="py-20 border-t border-white/5 bg-black/30">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          
+
           <div className="mb-12 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
               <span className="text-xs font-black uppercase tracking-widest text-primary">Official Store</span>
@@ -395,7 +394,7 @@ export default function HomePage() {
                       alt={prod.name}
                       className="h-full w-full object-cover transition duration-500 group-hover:scale-103"
                     />
-                    
+
                     {/* Category tag */}
                     <span className="absolute top-3 left-3 rounded bg-black/85 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-primary border border-primary/20">
                       {prod.category}
@@ -431,7 +430,7 @@ export default function HomePage() {
       {/* 6. EVENTS TIMELINE PREVIEW */}
       <section className="py-20 border-t border-white/5">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          
+
           <div className="mb-12 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
               <span className="text-xs font-black uppercase tracking-widest text-primary">Upcoming Schedule</span>
