@@ -34,13 +34,12 @@ export const Navbar: React.FC = () => {
           
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/" onClick={handleLinkClick} className="group flex items-center gap-2">
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary font-black text-xl text-white shadow-lg shadow-primary/30 transition-transform group-hover:scale-105 active:scale-95">
-                I
-              </span>
-              <span className="font-sans text-2xl font-black uppercase tracking-wider text-white transition-colors group-hover:text-primary">
-                Immortal<span className="text-primary group-hover:text-white">Division</span>
-              </span>
+            <Link href="/" onClick={handleLinkClick} className="group flex items-center">
+              <img
+                src="/logo.jpg"
+                alt="Immortal Division Logo"
+                className="h-10 w-auto object-contain transition-transform group-hover:scale-105 active:scale-95"
+              />
             </Link>
           </div>
 

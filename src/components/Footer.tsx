@@ -30,13 +30,12 @@ export const Footer: React.FC = () => {
           
           {/* Brand Col */}
           <div className="space-y-4 md:col-span-2">
-            <Link href="/" className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded bg-primary font-black text-sm text-white">
-                I
-              </span>
-              <span className="font-sans text-xl font-black uppercase tracking-wider text-white">
-                Immortal<span className="text-primary">Division</span>
-              </span>
+            <Link href="/" className="flex items-center">
+              <img
+                src="/logo.jpg"
+                alt="Immortal Division Logo"
+                className="h-8 w-auto object-contain"
+              />
             </Link>
             <p className="max-w-sm text-sm text-muted">
               Mewadahi ekosistem musik independen, sub-kultur urban, dan seni digital. Immortal Division mengonsolidasikan karya, program audio-visual, berita, jurnalisme musik, dan interaksi komunitas.

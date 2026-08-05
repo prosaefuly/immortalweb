@@ -139,9 +139,9 @@ export default function HomePage() {
                 className="relative overflow-hidden rounded-3xl border border-primary/20 bg-neutral-900 p-2 shadow-2xl glass-red shadow-primary/10"
               >
                 <img
-                  src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=80"
-                  alt="Immortal Division Sound Stage"
-                  className="h-[300px] w-full rounded-2xl object-cover sm:h-[400px]"
+                  src="/banner.jpg"
+                  alt="Vision Dominate Banner"
+                  className="h-[300px] w-full rounded-2xl object-contain bg-black sm:h-[400px]"
                 />
                 
                 {/* Floating overlays */}
