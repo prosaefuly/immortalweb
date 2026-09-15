@@ -183,7 +183,7 @@ export default function ProgramDetailPage({ params }: PageProps) {
             <div className="rounded-3xl border border-white/5 bg-[#08080a] p-6 md:p-8 space-y-4">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="rounded bg-primary/10 border border-primary/20 py-0.5 px-2 text-[10px] font-black uppercase tracking-widest text-primary">
-                  Season {activeEpisode.season} • Episode {activeEpisode.episode_number}
+                  Season {activeEpisode.season}
                 </span>
                 <span className="text-xs text-muted">
                   Duration: {activeEpisode.duration}
@@ -356,7 +356,7 @@ export default function ProgramDetailPage({ params }: PageProps) {
                       {/* Episode Meta */}
                       <div className="min-w-0 space-y-1">
                         <span className="text-[9px] font-black tracking-widest text-primary uppercase">
-                          Episode {ep.episode_number}
+                          {new Date(ep.published_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </span>
                         <h4 className={`text-xs font-bold leading-snug truncate ${isActive ? 'text-primary' : 'text-white'}`}>
                           {ep.title}

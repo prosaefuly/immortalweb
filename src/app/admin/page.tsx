@@ -6,7 +6,7 @@ import {
   // Read APIs
   getPrograms, getEpisodes, getArtWorks, getMusicTracks, getBlogPosts, getEvents, getInquiries, getMembersList, getProducts, getOrders,
   // Mutation APIs
-  addProgram, deleteProgram, updateProgram, addEpisode, deleteEpisode, updateEpisode, addMusicTrack, deleteMusicTrack, updateMusicTrack,
+  addProgram, deleteProgram, updateProgram, extractYouTubeId, addEpisode, deleteEpisode, updateEpisode, addMusicTrack, deleteMusicTrack, updateMusicTrack,
   addArtWork, deleteArtWork, updateArtWork, addBlogPost, deleteBlogPost, updateBlogPost, addEvent, deleteEvent, updateEvent,
   updateInquiryStatus, deleteInquiry, deleteMember, toggleAdminPrivilege, createAdminAccount,
   getPartnerBrands, addPartnerBrand, deletePartnerBrand, getB2BContent, updateB2BContent,
@@ -111,7 +111,7 @@ export default function AdminPage() {
   const [epDesc, setEpDesc] = useState('');
   const [epYoutubeId, setEpYoutubeId] = useState('');
   const [epSeason, setEpSeason] = useState(1);
-  const [epNumber, setEpNumber] = useState(1);
+  const [epPublishedAt, setEpPublishedAt] = useState(() => new Date().toISOString().split('T')[0]);
   const [epDuration, setEpDuration] = useState('10:00');
   const [epExclusive, setEpExclusive] = useState(false);
 
@@ -381,15 +381,20 @@ export default function AdminPage() {
     e.preventDefault();
     if (!epProgId || !epTitle || !epYoutubeId) return;
 
-    const payload = {
+    const cleanYtId = extractYouTubeId(epYoutubeId);
+    const releaseIso = epPublishedAt 
+      ? (epPublishedAt.includes('T') ? epPublishedAt : new Date(epPublishedAt).toISOString()) 
+      : new Date().toISOString();
+
+    const payload: any = {
       program_id: epProgId,
       title: epTitle,
       description: epDesc,
-      youtube_id: epYoutubeId,
-      season: Number(epSeason),
-      episode_number: Number(epNumber),
+      youtube_id: cleanYtId,
+      season: Number(epSeason) || 1,
       duration: epDuration,
-      is_exclusive: epExclusive
+      is_exclusive: epExclusive,
+      published_at: releaseIso
     };
 
     if (editingEpisodeId) {
@@ -405,7 +410,7 @@ export default function AdminPage() {
     setEpDesc('');
     setEpYoutubeId('');
     setEpSeason(1);
-    setEpNumber(1);
+    setEpPublishedAt(new Date().toISOString().split('T')[0]);
     setEpDuration('10:00');
     setEpExclusive(false);
     refreshData();
@@ -417,8 +422,8 @@ export default function AdminPage() {
     setEpTitle(ep.title);
     setEpDesc(ep.description || '');
     setEpYoutubeId(ep.youtube_id);
-    setEpSeason(ep.season);
-    setEpNumber(ep.episode_number || 1);
+    setEpSeason(ep.season || 1);
+    setEpPublishedAt(ep.published_at ? ep.published_at.split('T')[0] : new Date().toISOString().split('T')[0]);
     setEpDuration(ep.duration || '10:00');
     setEpExclusive(ep.is_exclusive || false);
   };
@@ -430,7 +435,7 @@ export default function AdminPage() {
     setEpDesc('');
     setEpYoutubeId('');
     setEpSeason(1);
-    setEpNumber(1);
+    setEpPublishedAt(new Date().toISOString().split('T')[0]);
     setEpDuration('10:00');
     setEpExclusive(false);
   };
@@ -1363,15 +1368,16 @@ export default function AdminPage() {
                         />
                       </div>
                       <div>
-                        <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">YouTube Video ID</label>
+                        <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">Link Video YouTube (Full URL atau Video ID)</label>
                         <input
                           type="text"
                           required
-                          placeholder="e.g. dQw4w9WgXcQ"
+                          placeholder="e.g. https://www.youtube.com/watch?v=... atau Video ID"
                           value={epYoutubeId}
                           onChange={(e) => setEpYoutubeId(e.target.value)}
                           className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none focus:border-primary/50"
                         />
+                        <p className="mt-1 text-[9px] text-neutral-500">Mendukung link lengkap youtube.com, youtu.be, shorts, maupun video ID saja.</p>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
@@ -1386,14 +1392,13 @@ export default function AdminPage() {
                           />
                         </div>
                         <div>
-                          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">Episode No.</label>
+                          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">Tanggal Rilis (Publish Date)</label>
                           <input
-                            type="number"
+                            type="date"
                             required
-                            min={1}
-                            value={epNumber}
-                            onChange={(e) => setEpNumber(Number(e.target.value))}
-                            className="w-full rounded-xl border border-white/10 bg-black/40 py-2 px-4 text-xs text-white outline-none"
+                            value={epPublishedAt}
+                            onChange={(e) => setEpPublishedAt(e.target.value)}
+                            className="w-full rounded-xl border border-white/10 bg-black/40 py-2 px-4 text-xs text-white outline-none focus:border-primary/50"
                           />
                         </div>
                       </div>
@@ -1453,7 +1458,7 @@ export default function AdminPage() {
                             <div className="min-w-0">
                               <h4 className="text-xs font-bold text-white truncate">{e.title}</h4>
                               <p className="text-[9px] text-muted">
-                                {p?.title || 'Program'} • Season {e.season} Ep {e.episode_number}
+                                {p?.title || 'Program'} • Season {e.season} • Rilis: {e.published_at ? new Date(e.published_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
                               </p>
                               {e.is_exclusive && (
                                 <span className="inline-block rounded bg-primary/10 border border-primary/20 text-[8px] text-primary px-1 mt-1 font-bold">MEMBER GATED</span>

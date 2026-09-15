@@ -12,6 +12,25 @@ export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
 export const MASTER_ADMIN_ID = '88888888-8888-4888-a888-888888888888';
 
+export const extractYouTubeId = (urlOrId?: string | null): string => {
+  if (!urlOrId) return '';
+  const trimmed = urlOrId.trim();
+  if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) {
+    return trimmed;
+  }
+  const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts|live)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+  const match = trimmed.match(regex);
+  if (match && match[1]) {
+    return match[1];
+  }
+  try {
+    const urlObj = new URL(trimmed.startsWith('http') ? trimmed : 'https://' + trimmed);
+    const v = urlObj.searchParams.get('v');
+    if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return v;
+  } catch (e) {}
+  return trimmed;
+};
+
 export const isValidUUID = (val?: string | null): boolean => {
   if (!val || typeof val !== 'string') return false;
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
@@ -59,7 +78,7 @@ export interface Episode {
   description: string;
   youtube_id: string;
   season: number;
-  episode_number: number;
+  episode_number?: number;
   duration: string;
   published_at: string;
   is_exclusive: boolean;
@@ -613,13 +632,20 @@ export const getEpisodes = async (programId?: string): Promise<Episode[]> => {
     let query = supabase.from('episodes').select('*').order('published_at', { ascending: false });
     if (programId) query = query.eq('program_id', programId);
     const { data, error } = await query;
-    if (!error && data) return data as unknown as Episode[];
+    if (!error && data) {
+      return (data as unknown as Episode[]).sort(
+        (a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
+      );
+    }
   }
   const eps = getLocalStorage('immortal_episodes', mockEpisodes);
+  let list = eps;
   if (programId) {
-    return eps.filter((e: Episode) => e.program_id === programId);
+    list = eps.filter((e: Episode) => e.program_id === programId);
   }
-  return eps;
+  return [...list].sort(
+    (a: Episode, b: Episode) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
+  );
 };
 
 export const getEpisodeById = async (id: string): Promise<Episode | undefined> => {
@@ -1638,19 +1664,26 @@ export const deleteProgram = async (id: string): Promise<boolean> => {
 };
 
 // 3. Episode CRUD
-export const addEpisode = async (data: Omit<Episode, 'id' | 'published_at'>): Promise<Episode> => {
+export const addEpisode = async (data: Omit<Episode, 'id'> & { published_at?: string }): Promise<Episode> => {
+  const cleanYoutubeId = extractYouTubeId(data.youtube_id);
+  const publishDate = data.published_at 
+    ? (data.published_at.includes('T') ? data.published_at : new Date(data.published_at).toISOString())
+    : new Date().toISOString();
+
   if (isSupabaseConfigured && supabase) {
-    const insertData = {
+    const insertData: any = {
       program_id: data.program_id,
       title: data.title,
       description: data.description,
-      youtube_id: data.youtube_id,
-      season: data.season,
-      episode_number: data.episode_number,
+      youtube_id: cleanYoutubeId,
+      season: data.season ?? 1,
       duration: data.duration,
-      is_exclusive: data.is_exclusive,
-      published_at: new Date().toISOString()
+      is_exclusive: Boolean(data.is_exclusive),
+      published_at: publishDate
     };
+    if (data.episode_number !== undefined) {
+      insertData.episode_number = data.episode_number;
+    }
     const { data: newEp, error } = await supabase.from('episodes').insert([insertData]).select().single();
     if (!error && newEp) return newEp;
     console.error('Error adding episode to Supabase:', error);
@@ -1658,10 +1691,11 @@ export const addEpisode = async (data: Omit<Episode, 'id' | 'published_at'>): Pr
   const list = getLocalStorage('immortal_episodes', mockEpisodes);
   const newEp: Episode = {
     ...data,
+    youtube_id: cleanYoutubeId,
     id: `ep-${Date.now()}`,
-    published_at: new Date().toISOString()
+    published_at: publishDate
   };
-  setLocalStorage('immortal_episodes', [...list, newEp]);
+  setLocalStorage('immortal_episodes', [newEp, ...list]);
   return newEp;
 };
 
@@ -1830,14 +1864,22 @@ export const updateProgram = async (id: string, data: Partial<Omit<Program, 'id'
   return true;
 };
 
-export const updateEpisode = async (id: string, data: Partial<Omit<Episode, 'id' | 'published_at'>>): Promise<boolean> => {
+export const updateEpisode = async (id: string, data: Partial<Omit<Episode, 'id'>>): Promise<boolean> => {
+  const updateData = { ...data };
+  if (updateData.youtube_id) {
+    updateData.youtube_id = extractYouTubeId(updateData.youtube_id);
+  }
+  if (updateData.published_at && !updateData.published_at.includes('T')) {
+    updateData.published_at = new Date(updateData.published_at).toISOString();
+  }
+
   if (isSupabaseConfigured && supabase && isValidUUID(id)) {
-    const { error } = await supabase.from('episodes').update(data).eq('id', id);
+    const { error } = await supabase.from('episodes').update(updateData).eq('id', id);
     if (!error) return true;
     console.error('Error updating episode in Supabase:', error);
   }
   const list = getLocalStorage('immortal_episodes', mockEpisodes);
-  const updated = list.map((e: Episode) => e.id === id ? { ...e, ...data } : e);
+  const updated = list.map((e: Episode) => e.id === id ? { ...e, ...updateData } : e);
   setLocalStorage('immortal_episodes', updated);
   return true;
 };
