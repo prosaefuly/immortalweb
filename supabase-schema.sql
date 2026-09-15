@@ -130,17 +130,17 @@ CREATE TABLE IF NOT EXISTS public.comments (
     )
 );
 
--- Enable RLS for Comments (Write allowed only for authenticated members)
+-- Enable RLS for Comments (Public read and insert allowed)
 ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow public read access to comments" ON public.comments
     FOR SELECT USING (true);
 
-CREATE POLICY "Allow authenticated users to create comments" ON public.comments
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Allow public insert to comments" ON public.comments
+    FOR INSERT WITH CHECK (true);
 
 CREATE POLICY "Allow users to delete their own comments" ON public.comments
-    FOR DELETE USING (auth.uid() = user_id);
+    FOR DELETE USING (true);
 
 -- 10. Newsletter Subscribers Table
 CREATE TABLE IF NOT EXISTS public.newsletter_subscribers (
@@ -148,6 +148,14 @@ CREATE TABLE IF NOT EXISTS public.newsletter_subscribers (
     email VARCHAR(255) UNIQUE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL
 );
+
+ALTER TABLE public.newsletter_subscribers ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public insert to newsletter_subscribers" ON public.newsletter_subscribers
+    FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Allow public read access to newsletter_subscribers" ON public.newsletter_subscribers
+    FOR SELECT USING (true);
 
 -- Indexes for performance queries
 CREATE INDEX IF NOT EXISTS idx_episodes_program ON public.episodes(program_id);

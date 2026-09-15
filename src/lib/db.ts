@@ -10,6 +10,13 @@ const supabaseAnonKey = typeof window !== 'undefined'
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
+export const MASTER_ADMIN_ID = '88888888-8888-4888-a888-888888888888';
+
+export const isValidUUID = (val?: string | null): boolean => {
+  if (!val || typeof val !== 'string') return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+};
+
 export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
@@ -406,7 +413,7 @@ const mockEvents: EventItem[] = [
 
 const mockMembersSeed: UserSession[] = [
   {
-    id: 'admin-master',
+    id: MASTER_ADMIN_ID,
     username: 'master_admin',
     fullName: 'Master Admin',
     email: 'admin@immortaldivision.com',
@@ -416,7 +423,7 @@ const mockMembersSeed: UserSession[] = [
     isAdmin: true
   },
   {
-    id: 'user-mock-1',
+    id: '22222222-2222-4222-a222-111111111111',
     username: 'vinyl_junkie',
     fullName: 'Maya Wijaya',
     email: 'maya@gmail.com',
@@ -426,7 +433,7 @@ const mockMembersSeed: UserSession[] = [
     isAdmin: false
   },
   {
-    id: 'user-mock-2',
+    id: '22222222-2222-4222-a222-222222222222',
     username: 'synth_builder',
     fullName: 'Reza Ahmad',
     email: 'reza@gmail.com',
@@ -678,7 +685,7 @@ export const updateInquiryStatus = async (id: string, status: string): Promise<b
 };
 
 export const deleteInquiry = async (id: string): Promise<boolean> => {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
     const { error } = await supabase.from('inquiries').delete().eq('id', id);
     return !error;
   }
@@ -763,10 +770,11 @@ export const addComment = async (commentData: {
   content: string;
 }): Promise<Comment | null> => {
   if (isSupabaseConfigured && supabase) {
+    const validUserId = isValidUUID(commentData.userId) ? commentData.userId : MASTER_ADMIN_ID;
     const { data, error } = await supabase.from('comments').insert([{
-      user_id: commentData.userId,
-      episode_id: commentData.episodeId || null,
-      post_id: commentData.postId || null,
+      user_id: validUserId,
+      episode_id: isValidUUID(commentData.episodeId) ? commentData.episodeId : null,
+      post_id: isValidUUID(commentData.postId) ? commentData.postId : null,
       content: commentData.content
     }]).select('*, profiles(username, avatar_url)').single();
     
@@ -837,7 +845,7 @@ export const addProduct = async (data: Omit<Product, 'id'>): Promise<Product> =>
 };
 
 export const deleteProduct = async (id: string): Promise<boolean> => {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
     const { error } = await supabase.from('products').delete().eq('id', id);
     if (!error) return true;
     console.error('Error deleting product from Supabase:', error);
@@ -878,7 +886,7 @@ export const placeOrder = async (data: Omit<Order, 'id' | 'payment_status' | 'cr
   if (isSupabaseConfigured && supabase) {
     const { error } = await supabase.from('orders').insert([{
       id: orderId,
-      product_id: data.product_id,
+      product_id: isValidUUID(data.product_id) ? data.product_id : null,
       buyer_name: data.buyer_name,
       buyer_email: data.buyer_email,
       buyer_phone: data.buyer_phone,
@@ -982,7 +990,7 @@ export const loginMock = (email: string, password?: string): UserSession => {
       throw new Error('Password Master Admin salah!');
     }
     const adminSession: UserSession = {
-      id: 'admin-master',
+      id: MASTER_ADMIN_ID,
       username: 'master_admin',
       fullName: 'Master Admin',
       email: 'admin@immortaldivision.com',
@@ -1104,7 +1112,7 @@ export const createAdminAccount = async (data: Omit<UserSession, 'id' | 'isLogge
 };
 
 export const deleteMember = async (id: string): Promise<boolean> => {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
     const { error } = await supabase.from('profiles').delete().eq('id', id);
     if (!error) return true;
     console.error('Error deleting profile from Supabase:', error);
@@ -1126,7 +1134,7 @@ export const toggleAdminPrivilege = async (id: string): Promise<boolean> => {
   const m = members.find((u: any) => u.id === id);
   const newAdminStatus = m ? !m.is_admin : true;
 
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
     const { error } = await supabase.from('profiles').update({ is_admin: newAdminStatus }).eq('id', id);
     if (!error) {
       const active = getCurrentUserSession();
@@ -1176,7 +1184,7 @@ export const addProgram = async (data: Omit<Program, 'id'>): Promise<Program> =>
 };
 
 export const deleteProgram = async (id: string): Promise<boolean> => {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
     const { error } = await supabase.from('programs').delete().eq('id', id);
     if (!error) return true;
     console.error('Error deleting program from Supabase:', error);
@@ -1222,7 +1230,7 @@ export const addEpisode = async (data: Omit<Episode, 'id' | 'published_at'>): Pr
 };
 
 export const deleteEpisode = async (id: string): Promise<boolean> => {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
     const { error } = await supabase.from('episodes').delete().eq('id', id);
     if (!error) return true;
     console.error('Error deleting episode from Supabase:', error);
@@ -1250,7 +1258,7 @@ export const addMusicTrack = async (data: Omit<MusicTrack, 'id'>): Promise<Music
 };
 
 export const deleteMusicTrack = async (id: string): Promise<boolean> => {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
     const { error } = await supabase.from('music_tracks').delete().eq('id', id);
     if (!error) return true;
     console.error('Error deleting music track from Supabase:', error);
@@ -1278,7 +1286,7 @@ export const addArtWork = async (data: Omit<ArtWork, 'id'>): Promise<ArtWork> =>
 };
 
 export const deleteArtWork = async (id: string): Promise<boolean> => {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
     const { error } = await supabase.from('art_works').delete().eq('id', id);
     if (!error) return true;
     console.error('Error deleting artwork from Supabase:', error);
@@ -1293,8 +1301,7 @@ export const deleteArtWork = async (id: string): Promise<boolean> => {
 export const addBlogPost = async (data: Omit<BlogPost, 'id' | 'published_at' | 'author'> & { authorName: string }): Promise<BlogPost> => {
   if (isSupabaseConfigured && supabase) {
     const active = getCurrentUserSession();
-    // Default uuid fallback or active.id
-    const authorId = active && active.isLoggedIn && active.id ? active.id : '88888888-8888-4888-a888-888888888888';
+    const authorId = active && active.isLoggedIn && isValidUUID(active.id) ? active.id : MASTER_ADMIN_ID;
     
     const insertData = {
       title: data.title,
@@ -1334,7 +1341,7 @@ export const addBlogPost = async (data: Omit<BlogPost, 'id' | 'published_at' | '
 };
 
 export const deleteBlogPost = async (id: string): Promise<boolean> => {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
     const { error } = await supabase.from('blog_posts').delete().eq('id', id);
     if (!error) return true;
     console.error('Error deleting blog post from Supabase:', error);
@@ -1362,7 +1369,7 @@ export const addEvent = async (data: Omit<EventItem, 'id'>): Promise<EventItem> 
 };
 
 export const deleteEvent = async (id: string): Promise<boolean> => {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
     const { error } = await supabase.from('events').delete().eq('id', id);
     if (!error) return true;
     console.error('Error deleting event from Supabase:', error);
@@ -1376,7 +1383,7 @@ export const deleteEvent = async (id: string): Promise<boolean> => {
 // --- UPDATE OPERATIONS (EDIT CRUD) ---
 
 export const updateProgram = async (id: string, data: Partial<Omit<Program, 'id'>>): Promise<boolean> => {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
     const { error } = await supabase.from('programs').update(data).eq('id', id);
     if (!error) return true;
     console.error('Error updating program in Supabase:', error);
@@ -1388,7 +1395,7 @@ export const updateProgram = async (id: string, data: Partial<Omit<Program, 'id'
 };
 
 export const updateEpisode = async (id: string, data: Partial<Omit<Episode, 'id' | 'published_at'>>): Promise<boolean> => {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
     const { error } = await supabase.from('episodes').update(data).eq('id', id);
     if (!error) return true;
     console.error('Error updating episode in Supabase:', error);
@@ -1400,7 +1407,7 @@ export const updateEpisode = async (id: string, data: Partial<Omit<Episode, 'id'
 };
 
 export const updateMusicTrack = async (id: string, data: Partial<Omit<MusicTrack, 'id'>>): Promise<boolean> => {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
     const { error } = await supabase.from('music_tracks').update(data).eq('id', id);
     if (!error) return true;
     console.error('Error updating music track in Supabase:', error);
@@ -1412,7 +1419,7 @@ export const updateMusicTrack = async (id: string, data: Partial<Omit<MusicTrack
 };
 
 export const updateArtWork = async (id: string, data: Partial<Omit<ArtWork, 'id'>>): Promise<boolean> => {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
     const { error } = await supabase.from('art_works').update(data).eq('id', id);
     if (!error) return true;
     console.error('Error updating artwork in Supabase:', error);
@@ -1437,9 +1444,11 @@ export const updateBlogPost = async (id: string, data: Partial<Omit<BlogPost, 'i
     // Clean undefined fields to avoid overwriting with null
     Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);
     
-    const { error } = await supabase.from('blog_posts').update(updateData).eq('id', id);
-    if (!error) return true;
-    console.error('Error updating blog post in Supabase:', error);
+    if (isValidUUID(id)) {
+      const { error } = await supabase.from('blog_posts').update(updateData).eq('id', id);
+      if (!error) return true;
+      console.error('Error updating blog post in Supabase:', error);
+    }
   }
   const list = getLocalStorage('immortal_blog', mockBlogPosts);
   const updated = list.map((p: BlogPost) => {
@@ -1454,7 +1463,7 @@ export const updateBlogPost = async (id: string, data: Partial<Omit<BlogPost, 'i
 };
 
 export const updateEvent = async (id: string, data: Partial<Omit<EventItem, 'id'>>): Promise<boolean> => {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
     const { error } = await supabase.from('events').update(data).eq('id', id);
     if (!error) return true;
     console.error('Error updating event in Supabase:', error);
@@ -1466,7 +1475,7 @@ export const updateEvent = async (id: string, data: Partial<Omit<EventItem, 'id'
 };
 
 export const updateProduct = async (id: string, data: Partial<Omit<Product, 'id'>>): Promise<boolean> => {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
     const { error } = await supabase.from('products').update(data).eq('id', id);
     if (!error) return true;
     console.error('Error updating product in Supabase:', error);
