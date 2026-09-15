@@ -2971,6 +2971,149 @@ export default function AdminPage() {
               </div>
             )}
 
+            {/* MENUS TAB (NAVBAR NAVIGATION VISIBILITY MANAGEMENT) */}
+            {activeTab === 'menus' && (
+              <div className="space-y-6">
+                {/* Top Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+                  <div>
+                    <h1 className="text-2xl font-black uppercase text-white tracking-wider flex items-center gap-2">
+                      <Compass className="text-primary" size={24} />
+                      <span>MANAJEMEN MENU NAVIGASI (HEADER NAVBAR)</span>
+                    </h1>
+                    <p className="text-xs text-muted mt-0.5">
+                      Atur visibilitas menu di bagian atas website. Anda dapat menyembunyikan (Hide) atau menampilkan (Show) menu sesuai kebutuhan publikasi situs.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleResetMenus}
+                    className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 py-2 px-4 text-xs font-bold uppercase tracking-wider text-neutral-300 hover:bg-white/10 hover:text-white transition cursor-pointer self-start sm:self-auto shrink-0"
+                    title="Reset semua menu ke kondisi default"
+                  >
+                    <RotateCcw size={13} />
+                    <span>Reset Menu Default</span>
+                  </button>
+                </div>
+
+                {/* Live Preview Box */}
+                <div className="rounded-3xl border border-primary/20 bg-gradient-to-r from-red-950/20 via-black to-neutral-900/40 p-6 glass-red shadow-xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-1.5">
+                      <Eye size={13} />
+                      <span>Pratinjau Live Header Website</span>
+                    </span>
+                    <span className="text-[10px] font-semibold text-neutral-400">
+                      {navMenuItems.filter(m => m.is_visible).length} dari {navMenuItems.length} Menu Aktif Tampil
+                    </span>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-black/60 p-4 flex flex-wrap items-center gap-4">
+                    <div className="flex items-center gap-2 pr-4 border-r border-white/10">
+                      <img src="/logo.png" alt="Logo" className="h-6 w-auto object-contain opacity-80" />
+                    </div>
+                    
+                    <div className="flex flex-wrap items-center gap-2">
+                      {navMenuItems.filter(m => m.is_visible).map((m) => (
+                        <span
+                          key={m.id}
+                          className="rounded-lg bg-primary/10 border border-primary/25 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary"
+                        >
+                          {m.label}
+                        </span>
+                      ))}
+                      {navMenuItems.filter(m => m.is_visible).length === 0 && (
+                        <span className="text-xs text-rose-400 italic">
+                          Semua menu disembunyikan. Header web hanya akan menampilkan logo dan tombol login.
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Menu Items Cards */}
+                <div className="space-y-3">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+                    Daftar Item Menu Navbar
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {navMenuItems.map((item, index) => {
+                      const isVisible = item.is_visible;
+                      return (
+                        <div
+                          key={item.id}
+                          className={`rounded-2xl border p-5 transition flex flex-col justify-between gap-4 ${
+                            isVisible
+                              ? 'border-white/10 bg-[#08080a] shadow-lg hover:border-primary/30'
+                              : 'border-white/5 bg-[#050507] opacity-60 hover:opacity-100 hover:border-white/20'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/5 font-mono text-xs font-bold text-neutral-400 border border-white/5">
+                                0{index + 1}
+                              </span>
+                              <div>
+                                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                                  <span>{item.label}</span>
+                                  <span className="text-[10px] text-muted font-mono font-normal">
+                                    ({item.path})
+                                  </span>
+                                </h4>
+                                <p className="text-[11px] text-neutral-500 mt-0.5">
+                                  Rute publik: <code className="text-neutral-400 font-mono">{item.path}</code>
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Status badge */}
+                            <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                              isVisible
+                                ? 'bg-emerald-950/40 border border-emerald-500/30 text-emerald-400'
+                                : 'bg-neutral-900 border border-neutral-700 text-neutral-400'
+                            }`}>
+                              {isVisible ? 'Tampil (Visible)' : 'Disembunyikan (Hidden)'}
+                            </span>
+                          </div>
+
+                          {/* Toggle action row */}
+                          <div className="flex items-center justify-between border-t border-white/5 pt-3">
+                            <span className="text-[10px] text-muted">
+                              {isVisible ? 'Menu ini muncul di header web' : 'Menu ini tidak muncul di header web'}
+                            </span>
+
+                            <button
+                              type="button"
+                              onClick={() => handleToggleMenuVisibility(item.id)}
+                              className={`flex items-center gap-1.5 rounded-xl py-2 px-4 text-xs font-bold uppercase tracking-wider transition cursor-pointer ${
+                                isVisible
+                                  ? 'bg-rose-950/30 border border-rose-500/30 text-rose-400 hover:bg-rose-950/60 hover:text-white'
+                                  : 'bg-emerald-950/30 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-950/60 hover:text-white'
+                              }`}
+                            >
+                              {isVisible ? (
+                                <>
+                                  <EyeOff size={13} />
+                                  <span>Sembunyikan (Hide)</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Eye size={13} />
+                                  <span>Tampilkan (Show)</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* 11. ADMIN SETTINGS TAB (Profile Photo & Password Management) */}
             {activeTab === 'settings' && (
               <div className="space-y-8">
