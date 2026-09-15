@@ -983,19 +983,100 @@ export const signUpMock = (username: string, fullName: string, email: string, bi
   return newSession;
 };
 
+export const getAdminPassword = (): string => {
+  return getLocalStorage('immortal_admin_password', 'PastiSukses');
+};
+
+export const updateAdminPassword = async (currentPassword: string, newPassword: string): Promise<boolean> => {
+  const existingPassword = getAdminPassword();
+  if (currentPassword !== existingPassword) {
+    throw new Error('Password saat ini salah!');
+  }
+  if (!newPassword || newPassword.length < 6) {
+    throw new Error('Password baru minimal harus 6 karakter!');
+  }
+  setLocalStorage('immortal_admin_password', newPassword);
+
+  // If Supabase is configured, attempt auth sync
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.auth.updateUser({ password: newPassword });
+    } catch (e) {
+      console.warn('Supabase auth password update skipped:', e);
+    }
+  }
+
+  return true;
+};
+
+export const updateAdminProfile = async (data: {
+  fullName?: string;
+  avatarUrl?: string;
+  bio?: string;
+}): Promise<UserSession> => {
+  const current = getCurrentUserSession();
+
+  const updatedFullName = data.fullName !== undefined ? data.fullName : current.fullName;
+  const updatedAvatarUrl = data.avatarUrl !== undefined ? data.avatarUrl : current.avatarUrl;
+  const updatedBio = data.bio !== undefined ? data.bio : current.bio;
+
+  setLocalStorage('immortal_admin_name', updatedFullName);
+  setLocalStorage('immortal_admin_avatar', updatedAvatarUrl);
+  setLocalStorage('immortal_admin_bio', updatedBio);
+
+  const updatedSession: UserSession = {
+    ...current,
+    fullName: updatedFullName,
+    avatarUrl: updatedAvatarUrl,
+    bio: updatedBio,
+    isAdmin: true
+  };
+
+  setLocalStorage('immortal_session', updatedSession);
+
+  // Sync in members list
+  const members = getLocalStorage('immortal_members', mockMembersSeed);
+  const syncedMembers = members.map((m: UserSession) => 
+    (m.id === MASTER_ADMIN_ID || m.email === 'admin@immortaldivision.com')
+      ? { ...m, fullName: updatedFullName, avatarUrl: updatedAvatarUrl, bio: updatedBio }
+      : m
+  );
+  setLocalStorage('immortal_members', syncedMembers);
+
+  // Sync to Supabase profiles table
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const updateData: any = {};
+      if (data.fullName !== undefined) updateData.full_name = data.fullName;
+      if (data.avatarUrl !== undefined) updateData.avatar_url = data.avatarUrl;
+      if (data.bio !== undefined) updateData.bio = data.bio;
+      
+      const { error } = await supabase.from('profiles').update(updateData).eq('id', MASTER_ADMIN_ID);
+      if (error) {
+        console.error('Error updating admin profile in Supabase:', error);
+      }
+    } catch (err) {
+      console.error('Exception updating admin profile in Supabase:', err);
+    }
+  }
+
+  return updatedSession;
+};
+
 export const loginMock = (email: string, password?: string): UserSession => {
   // Check master admin credentials
   if (email === 'admin@immortaldivision.com') {
-    if (password !== 'PastiSukses') {
+    const validPassword = getAdminPassword();
+    if (password !== validPassword) {
       throw new Error('Password Master Admin salah!');
     }
     const adminSession: UserSession = {
       id: MASTER_ADMIN_ID,
       username: 'master_admin',
-      fullName: 'Master Admin',
+      fullName: getLocalStorage('immortal_admin_name', 'Master Admin'),
       email: 'admin@immortaldivision.com',
-      avatarUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80',
-      bio: 'Immortal Division Chief System Administrator.',
+      avatarUrl: getLocalStorage('immortal_admin_avatar', 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80'),
+      bio: getLocalStorage('immortal_admin_bio', 'Immortal Division Chief System Administrator.'),
       isLoggedIn: true,
       isAdmin: true
     };

@@ -9,18 +9,18 @@ import {
   addProgram, deleteProgram, updateProgram, addEpisode, deleteEpisode, updateEpisode, addMusicTrack, deleteMusicTrack, updateMusicTrack,
   addArtWork, deleteArtWork, updateArtWork, addBlogPost, deleteBlogPost, updateBlogPost, addEvent, deleteEvent, updateEvent,
   updateInquiryStatus, deleteInquiry, deleteMember, toggleAdminPrivilege, createAdminAccount,
-  addProduct, deleteProduct, updateProduct, updateOrderStatus, deleteOrder,
+  addProduct, deleteProduct, updateProduct, updateOrderStatus, deleteOrder, updateAdminPassword, updateAdminProfile, getAdminPassword,
   // Types
   Program, Episode, ArtWork, MusicTrack, BlogPost, EventItem, Inquiry, UserSession, Product, Order
 } from '@/lib/db';
 import { 
   LayoutDashboard, Tv, Music, Image as ImageIcon, Newspaper, Calendar, Mail, Users, 
   Plus, Trash2, Edit, Shield, Eye, ShieldAlert, LogOut, CheckCircle2, UserPlus, FileText,
-  ShoppingBag, ShoppingCart, MessageSquare, Check, DollarSign
+  ShoppingBag, ShoppingCart, MessageSquare, Check, DollarSign, Settings, Key, Camera, Upload, Lock, EyeOff, ShieldCheck, RefreshCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-type TabType = 'overview' | 'programs' | 'episodes' | 'music' | 'art' | 'blogs' | 'events' | 'inquiries' | 'members' | 'products' | 'orders';
+type TabType = 'overview' | 'programs' | 'episodes' | 'music' | 'art' | 'blogs' | 'events' | 'inquiries' | 'members' | 'products' | 'orders' | 'settings';
 
 export default function AdminPage() {
   const { user, login, logout } = useApp();
@@ -52,6 +52,24 @@ export default function AdminPage() {
   const [members, setMembers] = useState<UserSession[]>([]);
   const [productsList, setProductsList] = useState<Product[]>([]);
   const [ordersList, setOrdersList] = useState<Order[]>([]);
+
+  // Admin Profile & Security States
+  const [adminFullName, setAdminFullName] = useState(user.fullName || 'Master Admin');
+  const [adminAvatarUrl, setAdminAvatarUrl] = useState(user.avatarUrl || '');
+  const [adminBio, setAdminBio] = useState(user.bio || '');
+  const [profileSuccessMsg, setProfileSuccessMsg] = useState('');
+  const [profileErrorMsg, setProfileErrorMsg] = useState('');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  const [currentPass, setCurrentPass] = useState('');
+  const [newPass, setNewPass] = useState('');
+  const [confirmPass, setConfirmPass] = useState('');
+  const [showCurrentPass, setShowCurrentPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
+  const [passSuccessMsg, setPassSuccessMsg] = useState('');
+  const [passErrorMsg, setPassErrorMsg] = useState('');
+  const [isUpdatingPass, setIsUpdatingPass] = useState(false);
 
   // Mutation Form States
   // 1. Program Form
@@ -157,8 +175,87 @@ export default function AdminPage() {
   useEffect(() => {
     if (user.isLoggedIn && user.isAdmin) {
       refreshData();
+      setAdminFullName(user.fullName || 'Master Admin');
+      setAdminAvatarUrl(user.avatarUrl || '');
+      setAdminBio(user.bio || '');
     }
   }, [user]);
+
+  // Admin Profile & Password Handlers
+  const handleAvatarFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      setProfileErrorMsg('Ukuran file maksimal 2MB!');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        setAdminAvatarUrl(reader.result);
+        setProfileErrorMsg('');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveAdminProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfileSuccessMsg('');
+    setProfileErrorMsg('');
+    setIsSavingProfile(true);
+    try {
+      const updated = await updateAdminProfile({
+        fullName: adminFullName,
+        avatarUrl: adminAvatarUrl,
+        bio: adminBio
+      });
+      user.fullName = updated.fullName;
+      user.avatarUrl = updated.avatarUrl;
+      user.bio = updated.bio;
+      setProfileSuccessMsg('Foto profil & identitas admin berhasil diperbarui!');
+      triggerSuccess('Profil Admin Diperbarui!');
+      setTimeout(() => setProfileSuccessMsg(''), 4000);
+      refreshData();
+    } catch (err: any) {
+      setProfileErrorMsg(err.message || 'Gagal memperbarui profil.');
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPassSuccessMsg('');
+    setPassErrorMsg('');
+    if (!currentPass) {
+      setPassErrorMsg('Masukkan password saat ini!');
+      return;
+    }
+    if (newPass.length < 6) {
+      setPassErrorMsg('Password baru minimal 6 karakter!');
+      return;
+    }
+    if (newPass !== confirmPass) {
+      setPassErrorMsg('Konfirmasi password tidak cocok!');
+      return;
+    }
+
+    setIsUpdatingPass(true);
+    try {
+      await updateAdminPassword(currentPass, newPass);
+      setPassSuccessMsg('Password admin berhasil diubah! Gunakan password baru ini untuk login berikutnya.');
+      triggerSuccess('Password Admin Berhasil Diubah!');
+      setCurrentPass('');
+      setNewPass('');
+      setConfirmPass('');
+      setTimeout(() => setPassSuccessMsg(''), 5000);
+    } catch (err: any) {
+      setPassErrorMsg(err.message || 'Gagal mengubah password.');
+    } finally {
+      setIsUpdatingPass(false);
+    }
+  };
 
   // Auth Handler
   const handleAdminLogin = (e: React.FormEvent) => {
@@ -813,13 +910,27 @@ export default function AdminPage() {
           <div className="lg:col-span-3 space-y-4">
             
             {/* Admin Brand Card */}
-            <div className="rounded-3xl border border-white/5 bg-[#08080a] p-5 flex items-center gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary font-black text-white">
-                A
-              </span>
-              <div>
-                <h2 className="text-sm font-black uppercase tracking-wider text-white">ImmortalAdmin</h2>
-                <p className="text-[10px] text-primary font-semibold">Master System</p>
+            <div 
+              onClick={() => setActiveTab('settings')}
+              className="rounded-3xl border border-white/5 bg-[#08080a] p-4 flex items-center gap-3 cursor-pointer hover:border-primary/30 transition group"
+              title="Buka Pengaturan Profil Admin"
+            >
+              <div className="relative">
+                <img
+                  src={user.avatarUrl || 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80'}
+                  alt="Admin Avatar"
+                  className="h-11 w-11 shrink-0 rounded-xl object-cover border border-white/10 group-hover:border-primary/50 transition"
+                />
+                <span className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-[#08080a]" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-xs font-black uppercase tracking-wider text-white truncate group-hover:text-primary transition">
+                  {user.fullName || 'Master Admin'}
+                </h2>
+                <p className="text-[10px] text-primary font-semibold flex items-center gap-1">
+                  <span>Master Admin</span>
+                  <span className="text-neutral-500">• Settings</span>
+                </p>
               </div>
             </div>
 
@@ -836,7 +947,8 @@ export default function AdminPage() {
                 { type: 'blogs', label: 'Journal Articles', icon: Newspaper },
                 { type: 'events', label: 'Events Schedule', icon: Calendar },
                 { type: 'inquiries', label: 'B2B Inquiries', icon: Mail, count: inquiries.filter(i => i.status === 'Pending').length },
-                { type: 'members', label: 'Members Area', icon: Users }
+                { type: 'members', label: 'Members Area', icon: Users },
+                { type: 'settings', label: 'Admin Settings', icon: Settings }
               ].map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.type;
@@ -2232,6 +2344,296 @@ export default function AdminPage() {
                           </div>
                         ))}
                       </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            )}
+
+            {/* 11. ADMIN SETTINGS TAB (Profile Photo & Password Management) */}
+            {activeTab === 'settings' && (
+              <div className="space-y-8">
+                {/* Header */}
+                <div>
+                  <h1 className="text-2xl font-black uppercase text-white tracking-wider flex items-center gap-3">
+                    <Settings className="text-primary" size={28} />
+                    <span>ADMIN SETTINGS & SECURITY</span>
+                  </h1>
+                  <p className="text-xs text-muted">
+                    Kelola foto profil avatar, nama tampilan, dan perbarui kata sandi Master Administrator.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+                  
+                  {/* LEFT: Profile & Avatar Management (Col Span 6) */}
+                  <div className="lg:col-span-6">
+                    <div className="rounded-3xl border border-white/5 bg-[#08080a] p-6 space-y-6">
+                      <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+                        <Camera className="text-primary" size={18} />
+                        <h3 className="text-sm font-black uppercase tracking-wider text-white">
+                          FOTO PROFIL & IDENTITAS
+                        </h3>
+                      </div>
+
+                      {/* Success / Error alerts */}
+                      {profileSuccessMsg && (
+                        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-950/20 p-3 text-xs font-semibold text-emerald-400">
+                          <CheckCircle2 size={16} className="shrink-0" />
+                          <span>{profileSuccessMsg}</span>
+                        </div>
+                      )}
+                      {profileErrorMsg && (
+                        <div className="flex items-center gap-2 rounded-xl border border-rose-500/20 bg-rose-950/20 p-3 text-xs font-semibold text-rose-400">
+                          <ShieldAlert size={16} className="shrink-0" />
+                          <span>{profileErrorMsg}</span>
+                        </div>
+                      )}
+
+                      {/* Live Avatar Preview */}
+                      <div className="flex flex-col sm:flex-row items-center gap-5 p-4 rounded-2xl border border-white/5 bg-black/40">
+                        <div className="relative group">
+                          <img
+                            src={adminAvatarUrl || user.avatarUrl || 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80'}
+                            alt="Admin Avatar Preview"
+                            className="h-24 w-24 rounded-2xl object-cover border-2 border-primary/40 shadow-xl shadow-primary/10"
+                          />
+                          <label 
+                            htmlFor="avatar-file-input"
+                            className="absolute -bottom-2 -right-2 p-2 rounded-xl bg-primary text-white cursor-pointer shadow-lg hover:bg-primary-hover transition"
+                            title="Pilih Foto dari Komputer"
+                          >
+                            <Camera size={14} />
+                          </label>
+                        </div>
+                        <div className="space-y-1.5 text-center sm:text-left min-w-0">
+                          <h4 className="text-sm font-black uppercase tracking-wider text-white truncate">
+                            {adminFullName || 'Master Admin'}
+                          </h4>
+                          <p className="text-[11px] text-muted">@{user.username || 'master_admin'} • {user.email || 'admin@immortaldivision.com'}</p>
+                          <span className="inline-flex items-center gap-1 rounded bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider">
+                            <Shield size={10} />
+                            <span>Master Administrator</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Form Profile Inputs */}
+                      <form onSubmit={handleSaveAdminProfile} className="space-y-4">
+                        {/* File Upload Button */}
+                        <div>
+                          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">
+                            Upload Foto Baru dari Komputer
+                          </label>
+                          <input
+                            id="avatar-file-input"
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp,image/jpg"
+                            onChange={handleAvatarFile}
+                            className="hidden"
+                          />
+                          <label
+                            htmlFor="avatar-file-input"
+                            className="flex cursor-pointer w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 bg-white/5 py-3 text-xs font-bold uppercase tracking-wider text-neutral-300 hover:border-primary/50 hover:text-white transition"
+                          >
+                            <Upload size={14} className="text-primary" />
+                            <span>Pilih File Gambar (.png, .jpg, .webp)</span>
+                          </label>
+                        </div>
+
+                        {/* URL Input */}
+                        <div>
+                          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">
+                            Atau Masukkan URL Foto Profil
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="https://images.unsplash.com/... atau URL foto"
+                            value={adminAvatarUrl}
+                            onChange={(e) => setAdminAvatarUrl(e.target.value)}
+                            className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none focus:border-primary/50"
+                          />
+                        </div>
+
+                        {/* Full Name */}
+                        <div>
+                          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">
+                            Nama Lengkap Administrator
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="Master Admin"
+                            value={adminFullName}
+                            onChange={(e) => setAdminFullName(e.target.value)}
+                            className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none focus:border-primary/50"
+                          />
+                        </div>
+
+                        {/* Bio */}
+                        <div>
+                          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">
+                            Bio Admin
+                          </label>
+                          <textarea
+                            placeholder="Deskripsi peran atau bio admin..."
+                            value={adminBio}
+                            onChange={(e) => setAdminBio(e.target.value)}
+                            rows={3}
+                            className="w-full rounded-xl border border-white/10 bg-black/40 p-4 text-xs text-white outline-none resize-none focus:border-primary/50"
+                          />
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={isSavingProfile}
+                          className="flex cursor-pointer w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-xs font-bold uppercase tracking-wider text-white hover:bg-primary-hover transition disabled:opacity-50"
+                        >
+                          {isSavingProfile ? (
+                            <>
+                              <RefreshCw size={14} className="animate-spin" />
+                              <span>Menyimpan...</span>
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 size={14} />
+                              <span>Simpan Perubahan Profil</span>
+                            </>
+                          )}
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+
+                  {/* RIGHT: Password Security Management (Col Span 6) */}
+                  <div className="lg:col-span-6">
+                    <div className="rounded-3xl border border-white/5 bg-[#08080a] p-6 space-y-6">
+                      <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+                        <Key className="text-primary" size={18} />
+                        <h3 className="text-sm font-black uppercase tracking-wider text-white">
+                          GANTI PASSWORD MASTER ADMIN
+                        </h3>
+                      </div>
+
+                      {/* Success / Error alerts */}
+                      {passSuccessMsg && (
+                        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-950/20 p-3 text-xs font-semibold text-emerald-400">
+                          <CheckCircle2 size={16} className="shrink-0" />
+                          <span>{passSuccessMsg}</span>
+                        </div>
+                      )}
+                      {passErrorMsg && (
+                        <div className="flex items-center gap-2 rounded-xl border border-rose-500/20 bg-rose-950/20 p-3 text-xs font-semibold text-rose-400">
+                          <ShieldAlert size={16} className="shrink-0" />
+                          <span>{passErrorMsg}</span>
+                        </div>
+                      )}
+
+                      <div className="rounded-2xl border border-amber-500/20 bg-amber-950/15 p-4 flex items-start gap-3">
+                        <Lock size={18} className="text-amber-400 shrink-0 mt-0.5" />
+                        <div className="space-y-1 text-xs">
+                          <p className="font-bold text-amber-300">Keamanan Akun Master</p>
+                          <p className="text-[11px] text-neutral-400 leading-relaxed">
+                            Password awal default adalah <code className="bg-black/50 px-1 py-0.5 rounded text-amber-300 font-mono">PastiSukses</code>. Pastikan password baru Anda kuat (minimal 6 karakter) dan mudah diingat.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Form Password */}
+                      <form onSubmit={handleUpdatePassword} className="space-y-4">
+                        {/* Current Password */}
+                        <div>
+                          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">
+                            Password Saat Ini
+                          </label>
+                          <div className="relative">
+                            <input
+                              type={showCurrentPass ? 'text' : 'password'}
+                              required
+                              placeholder="Masukkan password saat ini"
+                              value={currentPass}
+                              onChange={(e) => setCurrentPass(e.target.value)}
+                              className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 pl-4 pr-10 text-xs text-white outline-none focus:border-primary/50"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowCurrentPass(!showCurrentPass)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white"
+                            >
+                              {showCurrentPass ? <EyeOff size={14} /> : <Eye size={14} />}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* New Password */}
+                        <div>
+                          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">
+                            Password Baru (Minimal 6 karakter)
+                          </label>
+                          <div className="relative">
+                            <input
+                              type={showNewPass ? 'text' : 'password'}
+                              required
+                              minLength={6}
+                              placeholder="Ketik password baru..."
+                              value={newPass}
+                              onChange={(e) => setNewPass(e.target.value)}
+                              className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 pl-4 pr-10 text-xs text-white outline-none focus:border-primary/50"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowNewPass(!showNewPass)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white"
+                            >
+                              {showNewPass ? <EyeOff size={14} /> : <Eye size={14} />}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Confirm Password */}
+                        <div>
+                          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">
+                            Konfirmasi Password Baru
+                          </label>
+                          <div className="relative">
+                            <input
+                              type={showConfirmPass ? 'text' : 'password'}
+                              required
+                              minLength={6}
+                              placeholder="Ulangi password baru..."
+                              value={confirmPass}
+                              onChange={(e) => setConfirmPass(e.target.value)}
+                              className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 pl-4 pr-10 text-xs text-white outline-none focus:border-primary/50"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmPass(!showConfirmPass)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white"
+                            >
+                              {showConfirmPass ? <EyeOff size={14} /> : <Eye size={14} />}
+                            </button>
+                          </div>
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={isUpdatingPass}
+                          className="flex cursor-pointer w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-xs font-bold uppercase tracking-wider text-white hover:bg-primary-hover transition disabled:opacity-50"
+                        >
+                          {isUpdatingPass ? (
+                            <>
+                              <RefreshCw size={14} className="animate-spin" />
+                              <span>Memperbarui...</span>
+                            </>
+                          ) : (
+                            <>
+                              <ShieldCheck size={14} />
+                              <span>Perbarui Password Admin</span>
+                            </>
+                          )}
+                        </button>
+                      </form>
                     </div>
                   </div>
 
