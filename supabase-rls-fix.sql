@@ -88,3 +88,27 @@ ALTER TABLE public.profiles ALTER COLUMN id SET DEFAULT gen_random_uuid();
 
 -- Buka izin CRUD penuh (Select, Insert, Update, Delete) untuk Master Admin dan Member
 ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;
+
+-- ==========================================
+-- 7. PARTNER BRANDS TABLE (Brands Who Trust Us)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS public.partner_brands (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    logo_url TEXT,
+    website_url TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL
+);
+
+ALTER TABLE public.partner_brands DISABLE ROW LEVEL SECURITY;
+
+-- ==========================================
+-- 8. SITE SETTINGS TABLE (B2B Content & Pitch Deck)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS public.site_settings (
+    key VARCHAR(100) PRIMARY KEY,
+    value JSONB NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL
+);
+
+ALTER TABLE public.site_settings DISABLE ROW LEVEL SECURITY;

@@ -9,14 +9,16 @@ import {
   addProgram, deleteProgram, updateProgram, addEpisode, deleteEpisode, updateEpisode, addMusicTrack, deleteMusicTrack, updateMusicTrack,
   addArtWork, deleteArtWork, updateArtWork, addBlogPost, deleteBlogPost, updateBlogPost, addEvent, deleteEvent, updateEvent,
   updateInquiryStatus, deleteInquiry, deleteMember, toggleAdminPrivilege, createAdminAccount,
+  getPartnerBrands, addPartnerBrand, deletePartnerBrand, getB2BContent, updateB2BContent,
   addProduct, deleteProduct, updateProduct, updateOrderStatus, deleteOrder, updateAdminPassword, updateAdminProfile, getAdminPassword,
   // Types
-  Program, Episode, ArtWork, MusicTrack, BlogPost, EventItem, Inquiry, UserSession, Product, Order
+  Program, Episode, ArtWork, MusicTrack, BlogPost, EventItem, Inquiry, UserSession, Product, Order,
+  PartnerBrand, B2BContent, defaultB2BContent, defaultPartnerBrands
 } from '@/lib/db';
 import { 
   LayoutDashboard, Tv, Music, Image as ImageIcon, Newspaper, Calendar, Mail, Users, 
   Plus, Trash2, Edit, Shield, Eye, ShieldAlert, LogOut, CheckCircle2, UserPlus, FileText,
-  ShoppingBag, ShoppingCart, MessageSquare, Check, DollarSign, Settings, Key, Camera, Upload, Lock, EyeOff, ShieldCheck, RefreshCw
+  ShoppingBag, ShoppingCart, MessageSquare, Check, DollarSign, Settings, Key, Camera, Upload, Lock, EyeOff, ShieldCheck, RefreshCw, Briefcase, Globe, ExternalLink
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -25,6 +27,26 @@ type TabType = 'overview' | 'programs' | 'episodes' | 'music' | 'art' | 'blogs' 
 export default function AdminPage() {
   const { user, login, logout } = useApp();
   
+  // B2B & Brands Management State
+  const [b2bSubTab, setB2bSubTab] = useState<'tickets' | 'content' | 'brands'>('tickets');
+  const [partnerBrands, setPartnerBrands] = useState<PartnerBrand[]>(defaultPartnerBrands);
+  const [b2bContent, setB2bContent] = useState<B2BContent>(defaultB2BContent);
+
+  // Form states for B2B Content
+  const [b2bWhyTitle, setB2bWhyTitle] = useState('');
+  const [b2bWhyDesc, setB2bWhyDesc] = useState('');
+  const [b2bWhyPoints, setB2bWhyPoints] = useState<string[]>([]);
+  const [b2bPitchDeckTitle, setB2bPitchDeckTitle] = useState('');
+  const [b2bPitchDeckDesc, setB2bPitchDeckDesc] = useState('');
+  const [b2bPitchDeckUrl, setB2bPitchDeckUrl] = useState('');
+  const [isSavingB2B, setIsSavingB2B] = useState(false);
+
+  // Form states for Partner Brands
+  const [brandName, setBrandName] = useState('');
+  const [brandLogoUrl, setBrandLogoUrl] = useState('');
+  const [brandWebsiteUrl, setBrandWebsiteUrl] = useState('');
+  const [isAddingBrand, setIsAddingBrand] = useState(false);
+
   // Auth Form Local State
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -152,6 +174,8 @@ export default function AdminPage() {
     const postsData = await getBlogPosts();
     const eventsData = await getEvents();
     const inquiriesData = await getInquiries();
+    const brandsData = await getPartnerBrands();
+    const b2bData = await getB2BContent();
     const membersData = await getMembersList();
     const prodsData = await getProducts();
     const ordsData = await getOrders();
@@ -163,6 +187,14 @@ export default function AdminPage() {
     setPosts(postsData);
     setEvents(eventsData);
     setInquiries(inquiriesData);
+    setPartnerBrands(brandsData);
+    setB2bContent(b2bData);
+    setB2bWhyTitle(b2bData.why_title || '');
+    setB2bWhyDesc(b2bData.why_description || '');
+    setB2bWhyPoints(b2bData.why_points && b2bData.why_points.length > 0 ? b2bData.why_points : defaultB2BContent.why_points);
+    setB2bPitchDeckTitle(b2bData.pitch_deck_title || '');
+    setB2bPitchDeckDesc(b2bData.pitch_deck_desc || '');
+    setB2bPitchDeckUrl(b2bData.pitch_deck_url || '');
     setMembers(membersData);
     setProductsList(prodsData);
     setOrdersList(ordsData);
@@ -680,6 +712,111 @@ export default function AdminPage() {
     await deleteInquiry(id);
     triggerSuccess('Inquiry Dihapus.');
     refreshData();
+  };
+
+  // --- B2B COLLABORATION HANDLERS ---
+  const handlePitchDeckFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 15 * 1024 * 1024) {
+      alert('Ukuran file Pitch Deck maksimal 15MB!');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        setB2bPitchDeckUrl(reader.result);
+        triggerSuccess('File Pitch Deck berhasil dimuat!');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleBrandLogoFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Ukuran file logo maksimal 2MB!');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        setBrandLogoUrl(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAddWhyPoint = () => {
+    setB2bWhyPoints(prev => [...prev, '']);
+  };
+
+  const handleUpdateWhyPoint = (index: number, val: string) => {
+    setB2bWhyPoints(prev => {
+      const copy = [...prev];
+      copy[index] = val;
+      return copy;
+    });
+  };
+
+  const handleRemoveWhyPoint = (index: number) => {
+    setB2bWhyPoints(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSaveB2BContent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingB2B(true);
+    try {
+      const cleanPoints = b2bWhyPoints.map(p => p.trim()).filter(Boolean);
+      const updated = await updateB2BContent({
+        why_title: b2bWhyTitle,
+        why_description: b2bWhyDesc,
+        why_points: cleanPoints.length > 0 ? cleanPoints : defaultB2BContent.why_points,
+        pitch_deck_title: b2bPitchDeckTitle,
+        pitch_deck_desc: b2bPitchDeckDesc,
+        pitch_deck_url: b2bPitchDeckUrl
+      });
+      setB2bContent(updated);
+      setB2bWhyPoints(updated.why_points);
+      triggerSuccess('Pengaturan Konten B2B & Pitch Deck Berhasil Disimpan!');
+    } catch (err: any) {
+      alert(err.message || 'Gagal menyimpan konten B2B.');
+    } finally {
+      setIsSavingB2B(false);
+    }
+  };
+
+  const handleAddBrand = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!brandName.trim()) {
+      alert('Nama Brand wajib diisi!');
+      return;
+    }
+    setIsAddingBrand(true);
+    try {
+      const newBrand = await addPartnerBrand({
+        name: brandName.trim(),
+        logo_url: brandLogoUrl.trim() || undefined,
+        website_url: brandWebsiteUrl.trim() || undefined
+      });
+      setPartnerBrands(prev => [...prev, newBrand]);
+      setBrandName('');
+      setBrandLogoUrl('');
+      setBrandWebsiteUrl('');
+      triggerSuccess(`Brand "${newBrand.name}" berhasil ditambahkan!`);
+    } catch (err: any) {
+      alert(err.message || 'Gagal menambahkan brand.');
+    } finally {
+      setIsAddingBrand(false);
+    }
+  };
+
+  const handleDeleteBrand = async (id: string, name: string) => {
+    if (!confirm(`Hapus brand partner "${name}"?`)) return;
+    setPartnerBrands(prev => prev.filter(b => b.id !== id));
+    await deletePartnerBrand(id);
+    triggerSuccess(`Brand "${name}" berhasil dihapus.`);
   };
 
   // 8. Member Actions
@@ -2165,71 +2302,525 @@ export default function AdminPage() {
               </div>
             )}
 
-            {/* INQUIRIES TAB */}
+            {/* INQUIRIES TAB (B2B COLLABORATION, PITCH DECK & BRANDS) */}
             {activeTab === 'inquiries' && (
               <div className="space-y-6">
-                <div>
-                  <h1 className="text-2xl font-black uppercase text-white tracking-wider">PARTNERSHIP INQUIRIES</h1>
-                  <p className="text-xs text-muted">Tiket pesan kemitraan B2B yang dikirimkan calon mitra.</p>
+                
+                {/* Header & Sub-Navigation */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+                  <div>
+                    <h1 className="text-2xl font-black uppercase text-white tracking-wider flex items-center gap-2">
+                      <Briefcase className="text-primary" size={24} />
+                      <span>B2B COLLABORATION ZONE</span>
+                    </h1>
+                    <p className="text-xs text-muted mt-0.5">
+                      Kelola tiket inquiry kemitraan, kustomisasi konten & dokumen Pitch Deck, dan kelola Brands Who Trust Us.
+                    </p>
+                  </div>
+
+                  {/* Sub-tabs */}
+                  <div className="flex items-center gap-1 bg-[#08080a] border border-white/10 p-1 rounded-2xl shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setB2bSubTab('tickets')}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition ${
+                        b2bSubTab === 'tickets'
+                          ? 'bg-primary text-white shadow-sm'
+                          : 'text-neutral-400 hover:text-white'
+                      }`}
+                    >
+                      <Mail size={13} />
+                      <span>Tiket Inquiries</span>
+                      {inquiries.length > 0 && (
+                        <span className="rounded-full bg-black/40 px-1.5 py-0.2 text-[10px]">
+                          {inquiries.length}
+                        </span>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setB2bSubTab('content')}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition ${
+                        b2bSubTab === 'content'
+                          ? 'bg-primary text-white shadow-sm'
+                          : 'text-neutral-400 hover:text-white'
+                      }`}
+                    >
+                      <FileText size={13} />
+                      <span>Konten & Pitch Deck</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setB2bSubTab('brands')}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition ${
+                        b2bSubTab === 'brands'
+                          ? 'bg-primary text-white shadow-sm'
+                          : 'text-neutral-400 hover:text-white'
+                      }`}
+                    >
+                      <Globe size={13} />
+                      <span>Brands Who Trust Us</span>
+                      {partnerBrands.length > 0 && (
+                        <span className="rounded-full bg-black/40 px-1.5 py-0.2 text-[10px]">
+                          {partnerBrands.length}
+                        </span>
+                      )}
+                    </button>
+                  </div>
                 </div>
 
-                <div className="space-y-4">
-                  {inquiries.length > 0 ? (
-                    inquiries.map((inq) => (
-                      <div key={inq.id} className="rounded-3xl border border-white/5 bg-[#08080a] p-6 space-y-4 relative overflow-hidden">
-                        {/* Top bar */}
-                        <div className="flex flex-wrap justify-between items-center gap-3 border-b border-white/5 pb-3">
-                          <div>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-primary">{inq.subject}</span>
-                            <h3 className="text-base font-bold text-white mt-0.5">from {inq.name} ({inq.company || 'Perorangan'})</h3>
-                            <p className="text-[10px] text-muted">Email: {inq.email} • Sent: {formatShortDate(inq.created_at)}</p>
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            {/* Status Pill Badge */}
-                            <span className={`rounded py-0.5 px-2.5 text-[9px] font-bold uppercase tracking-wider text-white ${
-                              inq.status === 'Pending' ? 'bg-primary' : inq.status === 'Reviewed' ? 'bg-amber-600' : 'bg-emerald-600'
-                            }`}>
-                              {inq.status}
-                            </span>
+                {/* 1. SUB-TAB: TICKETS */}
+                {b2bSubTab === 'tickets' && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+                        Daftar Tiket Inquiry Masuk ({inquiries.length})
+                      </h3>
+                    </div>
+
+                    {inquiries.length > 0 ? (
+                      inquiries.map((inq) => (
+                        <div key={inq.id} className="rounded-3xl border border-white/5 bg-[#08080a] p-6 space-y-4 relative overflow-hidden">
+                          {/* Top bar */}
+                          <div className="flex flex-wrap justify-between items-center gap-3 border-b border-white/5 pb-3">
+                            <div>
+                              <span className="text-[10px] font-black uppercase tracking-widest text-primary">{inq.subject}</span>
+                              <h3 className="text-base font-bold text-white mt-0.5">from {inq.name} ({inq.company || 'Perorangan'})</h3>
+                              <p className="text-[10px] text-muted">Email: {inq.email} • Sent: {formatShortDate(inq.created_at)}</p>
+                            </div>
                             
+                            <div className="flex items-center gap-2">
+                              {/* Status Pill Badge */}
+                              <span className={`rounded py-0.5 px-2.5 text-[9px] font-bold uppercase tracking-wider text-white ${
+                                inq.status === 'Pending' ? 'bg-primary' : inq.status === 'Reviewed' ? 'bg-amber-600' : 'bg-emerald-600'
+                              }`}>
+                                {inq.status}
+                              </span>
+                              
+                              <button
+                                onClick={() => handleDeleteInquiry(inq.id)}
+                                className="rounded-lg bg-rose-950/20 p-2 text-rose-400 hover:bg-rose-950/40 transition"
+                                title="Hapus tiket inquiry"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Content text */}
+                          <p className="text-xs text-neutral-300 whitespace-pre-wrap leading-relaxed bg-black/40 border border-white/5 p-4 rounded-xl">
+                            {inq.message}
+                          </p>
+
+                          {/* Actions */}
+                          <div className="flex gap-2">
                             <button
-                              onClick={() => handleDeleteInquiry(inq.id)}
-                              className="rounded-lg bg-rose-950/20 p-2 text-rose-400 hover:bg-rose-950/40 transition"
+                              onClick={() => handleInquiryStatus(inq.id, 'Reviewed')}
+                              className="rounded-lg bg-white/5 py-1.5 px-3 text-[10px] font-bold uppercase tracking-widest text-white hover:bg-white/10 transition"
                             >
-                              <Trash2 size={12} />
+                              Mark Reviewed
                             </button>
+                            <button
+                              onClick={() => handleInquiryStatus(inq.id, 'Replied')}
+                              className="rounded-lg bg-emerald-950/20 border border-emerald-500/25 py-1.5 px-3 text-[10px] font-bold uppercase tracking-widest text-emerald-400 hover:bg-emerald-600 hover:text-white transition"
+                            >
+                              Mark Replied
+                            </button>
+                            <a
+                              href={`mailto:${inq.email}?subject=Balasan: ${encodeURIComponent(inq.subject)} - Immortal Division`}
+                              className="rounded-lg bg-primary/10 border border-primary/20 py-1.5 px-3 text-[10px] font-bold uppercase tracking-widest text-primary hover:bg-primary hover:text-white transition flex items-center gap-1.5"
+                            >
+                              <Mail size={11} />
+                              <span>Balas Email Langsung</span>
+                            </a>
                           </div>
                         </div>
+                      ))
+                    ) : (
+                      <div className="py-12 rounded-3xl border border-white/5 bg-[#08080a] text-center text-sm text-neutral-600">
+                        Belum ada partnership inquiries yang masuk.
+                      </div>
+                    )}
+                  </div>
+                )}
 
-                        {/* Content text */}
-                        <p className="text-xs text-neutral-300 whitespace-pre-wrap leading-relaxed bg-black/40 border border-white/5 p-4 rounded-xl">
-                          {inq.message}
-                        </p>
+                {/* 2. SUB-TAB: CONTENT & PITCH DECK */}
+                {b2bSubTab === 'content' && (
+                  <form onSubmit={handleSaveB2BContent} className="space-y-6">
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                      
+                      {/* Left: Kenapa Bermitra Section (Col Span 6) */}
+                      <div className="lg:col-span-6 space-y-4">
+                        <div className="rounded-3xl border border-white/5 bg-[#08080a] p-6 space-y-4 shadow-lg">
+                          <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+                            <ShieldCheck className="text-primary" size={18} />
+                            <h3 className="text-sm font-bold uppercase tracking-wider text-white">
+                              SECTION "KENAPA BERMITRA DENGAN IMMORTAL DIVISION"
+                            </h3>
+                          </div>
 
-                        {/* Actions */}
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleInquiryStatus(inq.id, 'Reviewed')}
-                            className="rounded-lg bg-white/5 py-1.5 px-3 text-[10px] font-bold uppercase tracking-widest text-white hover:bg-white/10"
-                          >
-                            Mark Reviewed
-                          </button>
-                          <button
-                            onClick={() => handleInquiryStatus(inq.id, 'Replied')}
-                            className="rounded-lg bg-emerald-950/20 border border-emerald-500/25 py-1.5 px-3 text-[10px] font-bold uppercase tracking-widest text-emerald-400 hover:bg-emerald-600 hover:text-white"
-                          >
-                            Mark Replied
-                          </button>
+                          <div>
+                            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">
+                              Judul Utama
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              value={b2bWhyTitle}
+                              onChange={(e) => setB2bWhyTitle(e.target.value)}
+                              placeholder="Kenapa Bermitra dengan Immortal Division?"
+                              className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none focus:border-primary/50"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">
+                              Deskripsi Penjelasan
+                            </label>
+                            <textarea
+                              rows={3}
+                              required
+                              value={b2bWhyDesc}
+                              onChange={(e) => setB2bWhyDesc(e.target.value)}
+                              placeholder="Deskripsi keunggulan ekosistem Immortal Division..."
+                              className="w-full rounded-xl border border-white/10 bg-black/40 p-3 text-xs text-white outline-none focus:border-primary/50 resize-none leading-relaxed"
+                            />
+                          </div>
+
+                          {/* Dynamic Points */}
+                          <div className="space-y-3 pt-2">
+                            <div className="flex items-center justify-between">
+                              <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted">
+                                Poin-Poin Keunggulan Bermitra
+                              </label>
+                              <button
+                                type="button"
+                                onClick={handleAddWhyPoint}
+                                className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-primary hover:text-white transition cursor-pointer"
+                              >
+                                <Plus size={12} />
+                                <span>Tambah Poin</span>
+                              </button>
+                            </div>
+
+                            <div className="space-y-2">
+                              {b2bWhyPoints.map((point, idx) => (
+                                <div key={idx} className="flex items-center gap-2">
+                                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
+                                    {idx + 1}
+                                  </span>
+                                  <input
+                                    type="text"
+                                    value={point}
+                                    onChange={(e) => handleUpdateWhyPoint(idx, e.target.value)}
+                                    placeholder={`Poin keunggulan ke-${idx + 1}`}
+                                    className="flex-1 rounded-xl border border-white/10 bg-black/40 py-2 px-3 text-xs text-white outline-none focus:border-primary/50"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveWhyPoint(idx)}
+                                    className="rounded-lg p-2 text-neutral-500 hover:bg-rose-950/20 hover:text-rose-400 transition"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
                         </div>
                       </div>
-                    ))
-                  ) : (
-                    <div className="py-12 rounded-3xl border border-white/5 bg-[#08080a] text-center text-sm text-neutral-600">
-                      Belum ada partnership inquiries yang masuk.
+
+                      {/* Right: Pitch Deck Section (Col Span 6) */}
+                      <div className="lg:col-span-6 space-y-4">
+                        <div className="rounded-3xl border border-white/5 bg-[#08080a] p-6 space-y-4 shadow-lg">
+                          <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+                            <FileText className="text-primary" size={18} />
+                            <h3 className="text-sm font-bold uppercase tracking-wider text-white">
+                              DOKUMEN PITCH DECK (BUKAN MEDIA KIT)
+                            </h3>
+                          </div>
+
+                          <div>
+                            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">
+                              Judul Banner Pitch Deck
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              value={b2bPitchDeckTitle}
+                              onChange={(e) => setB2bPitchDeckTitle(e.target.value)}
+                              placeholder="Immortal Division Pitch Deck 2026"
+                              className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none focus:border-primary/50"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">
+                              Deskripsi Banner Pitch Deck
+                            </label>
+                            <textarea
+                              rows={3}
+                              required
+                              value={b2bPitchDeckDesc}
+                              onChange={(e) => setB2bPitchDeckDesc(e.target.value)}
+                              placeholder="Unduh presentasi deck kami berisi demografi audiens lengkap, rate card iklan..."
+                              className="w-full rounded-xl border border-white/10 bg-black/40 p-3 text-xs text-white outline-none focus:border-primary/50 resize-none leading-relaxed"
+                            />
+                          </div>
+
+                          {/* File Upload / Link */}
+                          <div className="space-y-3 pt-2">
+                            <div>
+                              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">
+                                Upload File Dokumen Pitch Deck (.pdf)
+                              </label>
+                              <input
+                                id="pitch-deck-file"
+                                type="file"
+                                accept="application/pdf"
+                                onChange={handlePitchDeckFile}
+                                className="hidden"
+                              />
+                              <label
+                                htmlFor="pitch-deck-file"
+                                className="flex cursor-pointer w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 bg-white/5 py-3 text-xs font-bold uppercase tracking-wider text-neutral-300 hover:border-primary/50 hover:text-white transition"
+                              >
+                                <Upload size={14} className="text-primary" />
+                                <span>Pilih Dokumen PDF Baru</span>
+                              </label>
+                            </div>
+
+                            <div>
+                              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">
+                                Atau Tautan URL Dokumen Pitch Deck (Google Drive / Direct PDF)
+                              </label>
+                              <input
+                                type="text"
+                                value={b2bPitchDeckUrl.startsWith('data:') ? '[File PDF Lokal Telah Diunggah]' : b2bPitchDeckUrl}
+                                onChange={(e) => setB2bPitchDeckUrl(e.target.value)}
+                                placeholder="https://example.com/pitch-deck-2026.pdf"
+                                className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none focus:border-primary/50"
+                              />
+                            </div>
+
+                            {b2bPitchDeckUrl && (
+                              <div className="flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs">
+                                <div className="flex items-center gap-2 text-primary font-bold">
+                                  <CheckCircle2 size={15} />
+                                  <span>Dokumen Pitch Deck Aktif Tersedia</span>
+                                </div>
+                                <div className="flex gap-2">
+                                  <a
+                                    href={b2bPitchDeckUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    download="Pitch-Deck-Preview.pdf"
+                                    className="text-[10px] font-bold text-neutral-300 hover:text-white underline cursor-pointer"
+                                  >
+                                    Preview
+                                  </a>
+                                  <button
+                                    type="button"
+                                    onClick={() => setB2bPitchDeckUrl('')}
+                                    className="text-[10px] font-bold text-rose-400 hover:text-rose-300 cursor-pointer"
+                                  >
+                                    Hapus
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                        </div>
+                      </div>
+
                     </div>
-                  )}
-                </div>
+
+                    {/* Submit Bar */}
+                    <div className="flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={isSavingB2B}
+                        className="flex cursor-pointer items-center gap-2 rounded-xl bg-primary py-3 px-6 text-xs font-bold uppercase tracking-wider text-white hover:bg-primary-hover transition shadow-md shadow-primary/20 disabled:opacity-50"
+                      >
+                        {isSavingB2B ? (
+                          <>
+                            <RefreshCw size={14} className="animate-spin" />
+                            <span>Menyimpan Perubahan...</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 size={14} />
+                            <span>Simpan Konten B2B & Pitch Deck</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* 3. SUB-TAB: BRANDS WHO TRUST US */}
+                {b2bSubTab === 'brands' && (
+                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                    
+                    {/* Left: Add Brand Form (Col Span 5) */}
+                    <div className="lg:col-span-5">
+                      <form onSubmit={handleAddBrand} className="rounded-3xl border border-white/5 bg-[#08080a] p-6 space-y-4 shadow-lg sticky top-24">
+                        <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+                          <Plus className="text-primary" size={18} />
+                          <h3 className="text-sm font-bold uppercase tracking-wider text-white">
+                            TAMBAH BRAND PARTNER BARU
+                          </h3>
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">
+                            Nama Brand / Perusahaan <span className="text-primary">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="e.g. Vans Indonesia, Roland, Marshall"
+                            value={brandName}
+                            onChange={(e) => setBrandName(e.target.value)}
+                            className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none focus:border-primary/50"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">
+                            Logo Brand (Upload File)
+                          </label>
+                          <input
+                            id="brand-logo-file"
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                            onChange={handleBrandLogoFile}
+                            className="hidden"
+                          />
+                          <label
+                            htmlFor="brand-logo-file"
+                            className="flex cursor-pointer w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 bg-white/5 py-2.5 text-xs font-bold uppercase tracking-wider text-neutral-300 hover:border-primary/50 hover:text-white transition"
+                          >
+                            <Upload size={13} className="text-primary" />
+                            <span>Pilih Gambar Logo (.png, .svg, .webp)</span>
+                          </label>
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">
+                            Atau Masukkan URL Logo
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="https://example.com/logo.png"
+                            value={brandLogoUrl}
+                            onChange={(e) => setBrandLogoUrl(e.target.value)}
+                            className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none focus:border-primary/50"
+                          />
+                        </div>
+
+                        {brandLogoUrl && (
+                          <div className="rounded-xl border border-white/10 bg-black/40 p-3 flex items-center justify-center">
+                            <img src={brandLogoUrl} alt="Preview" className="max-h-12 object-contain" />
+                          </div>
+                        )}
+
+                        <div>
+                          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">
+                            Tautan Website Brand (Opsional)
+                          </label>
+                          <input
+                            type="url"
+                            placeholder="https://brandwebsite.com"
+                            value={brandWebsiteUrl}
+                            onChange={(e) => setBrandWebsiteUrl(e.target.value)}
+                            className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none focus:border-primary/50"
+                          />
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={isAddingBrand}
+                          className="flex cursor-pointer w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-primary-hover transition shadow-md shadow-primary/20 disabled:opacity-50"
+                        >
+                          <Plus size={14} />
+                          <span>{isAddingBrand ? 'Menambahkan...' : 'Tambah ke Brands Who Trust Us'}</span>
+                        </button>
+                      </form>
+                    </div>
+
+                    {/* Right: Active Brands List (Col Span 7) */}
+                    <div className="lg:col-span-7 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+                          Brand Partner Aktif ({partnerBrands.length})
+                        </h3>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {partnerBrands.map((brand) => (
+                          <div
+                            key={brand.id || brand.name}
+                            className="rounded-2xl border border-white/5 bg-[#08080a] p-4 flex items-center justify-between gap-3 group hover:border-primary/30 transition"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="flex h-12 w-16 shrink-0 items-center justify-center rounded-xl bg-black/60 border border-white/5 p-2">
+                                {brand.logo_url ? (
+                                  <img
+                                    src={brand.logo_url}
+                                    alt={brand.name}
+                                    className="max-h-full max-w-full object-contain filter grayscale group-hover:grayscale-0 transition"
+                                  />
+                                ) : (
+                                  <span className="text-[10px] font-black text-neutral-500 uppercase tracking-widest text-center">
+                                    {brand.name.slice(0, 3)}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <h4 className="text-xs font-bold text-white truncate">{brand.name}</h4>
+                                {brand.website_url ? (
+                                  <a
+                                    href={brand.website_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[10px] text-muted hover:text-primary flex items-center gap-1 truncate mt-0.5"
+                                  >
+                                    <span>{brand.website_url.replace(/^https?:\/\//, '')}</span>
+                                    <ExternalLink size={9} />
+                                  </a>
+                                ) : (
+                                  <span className="text-[10px] text-neutral-600">Tanpa tautan</span>
+                                )}
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteBrand(brand.id, brand.name)}
+                              className="shrink-0 rounded-lg p-2 text-neutral-500 hover:bg-rose-950/20 hover:text-rose-400 transition cursor-pointer"
+                              title="Hapus brand ini"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+
+                      {partnerBrands.length === 0 && (
+                        <div className="py-12 rounded-3xl border border-white/5 bg-[#08080a] text-center text-sm text-neutral-600">
+                          Belum ada brand yang terdaftar.
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+                )}
+
               </div>
             )}
 

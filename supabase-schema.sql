@@ -195,3 +195,22 @@ CREATE TABLE IF NOT EXISTS public.orders (
 -- Indexes for Store
 CREATE INDEX IF NOT EXISTS idx_orders_product ON public.orders(product_id);
 
+-- 13. Partner Brands Table (Brands Who Trust Us)
+CREATE TABLE IF NOT EXISTS public.partner_brands (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    logo_url TEXT,
+    website_url TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL
+);
+
+ALTER TABLE public.partner_brands DISABLE ROW LEVEL SECURITY;
+
+-- 14. Site Settings Table (Key-Value configuration for B2B Pitch Deck, Content, etc.)
+CREATE TABLE IF NOT EXISTS public.site_settings (
+    key VARCHAR(100) PRIMARY KEY,
+    value JSONB NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL
+);
+
+ALTER TABLE public.site_settings DISABLE ROW LEVEL SECURITY;

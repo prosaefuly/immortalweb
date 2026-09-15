@@ -138,6 +138,23 @@ export interface Comment {
   created_at: string;
 }
 
+export interface PartnerBrand {
+  id: string;
+  name: string;
+  logo_url?: string;
+  website_url?: string;
+  created_at?: string;
+}
+
+export interface B2BContent {
+  why_title: string;
+  why_description: string;
+  why_points: string[];
+  pitch_deck_title: string;
+  pitch_deck_desc: string;
+  pitch_deck_url: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -518,8 +535,13 @@ const mockOrdersSeed: Order[] = [
 
 // --- REACTIVE STORAGE STATE ACCESS (LOCALSTORAGE FALLBACK) ---
 
+const nodeMemoryStorage = new Map<string, string>();
+
 const getLocalStorage = (key: string, defaultValue: any) => {
-  if (typeof window === 'undefined') return defaultValue;
+  if (typeof window === 'undefined') {
+    const mem = nodeMemoryStorage.get(key);
+    return mem ? JSON.parse(mem) : defaultValue;
+  }
   try {
     const item = window.localStorage.getItem(key);
     return item ? JSON.parse(item) : defaultValue;
@@ -529,7 +551,10 @@ const getLocalStorage = (key: string, defaultValue: any) => {
 };
 
 const setLocalStorage = (key: string, value: any) => {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {
+    nodeMemoryStorage.set(key, JSON.stringify(value));
+    return;
+  }
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
   } catch (e) {
@@ -647,7 +672,134 @@ export const getEvents = async (): Promise<EventItem[]> => {
   return getLocalStorage('immortal_events', mockEvents);
 };
 
-// --- B2B INQUIRIES & NEWSLETTER ---
+// --- B2B INQUIRIES, CONTENT & PARTNER BRANDS ---
+
+export const defaultPartnerBrands: PartnerBrand[] = [
+  { id: 'brand-1', name: 'MUTE Records', logo_url: '' },
+  { id: 'brand-2', name: 'RetroSynth Labs', logo_url: '' },
+  { id: 'brand-3', name: 'Kopi & Beats', logo_url: '' },
+  { id: 'brand-4', name: 'Blok M Vinyl', logo_url: '' },
+  { id: 'brand-5', name: 'Giga Stage Indo', logo_url: '' },
+  { id: 'brand-6', name: 'Beatmakers ID', logo_url: '' }
+];
+
+export const defaultB2BContent: B2BContent = {
+  why_title: 'Kenapa Bermitra dengan Immortal Division?',
+  why_description: 'Kami membangun ekosistem jurnalisme dan video musik terkurasi dengan audiens yang berfokus pada demografi urban, tech-savvy, dan pendukung produk kreatif.',
+  why_points: [
+    'Akses audiens pecinta musik alternatif & sub-kultur.',
+    'Integrasi program talkshow, live music, dan media sosial.',
+    'Kolaborasi merchandise eksklusif di galeri seni.'
+  ],
+  pitch_deck_title: 'Immortal Division Pitch Deck 2026',
+  pitch_deck_desc: 'Unduh presentasi deck kami berisi demografi audiens lengkap, rate card iklan, paket sponsorship event, dan studi kasus kemitraan kami.',
+  pitch_deck_url: ''
+};
+
+export const getPartnerBrands = async (): Promise<PartnerBrand[]> => {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('partner_brands')
+        .select('*')
+        .order('created_at', { ascending: true });
+      if (!error && data && data.length > 0) {
+        setLocalStorage('immortal_partner_brands', data);
+        return data;
+      }
+    } catch (e) {
+      console.warn('Error fetching partner_brands from Supabase:', e);
+    }
+  }
+  return getLocalStorage('immortal_partner_brands', defaultPartnerBrands);
+};
+
+export const addPartnerBrand = async (data: Omit<PartnerBrand, 'id' | 'created_at'>): Promise<PartnerBrand> => {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data: newBrand, error } = await supabase
+        .from('partner_brands')
+        .insert([{
+          name: data.name,
+          logo_url: data.logo_url || null,
+          website_url: data.website_url || null
+        }])
+        .select()
+        .single();
+      if (!error && newBrand) {
+        const localList = getLocalStorage('immortal_partner_brands', defaultPartnerBrands);
+        setLocalStorage('immortal_partner_brands', [...localList, newBrand]);
+        return newBrand;
+      }
+    } catch (e) {
+      console.warn('Error inserting partner_brand to Supabase:', e);
+    }
+  }
+  const localList = getLocalStorage('immortal_partner_brands', defaultPartnerBrands);
+  const newBrand: PartnerBrand = {
+    ...data,
+    id: `brand-${Date.now()}`,
+    created_at: new Date().toISOString()
+  };
+  setLocalStorage('immortal_partner_brands', [...localList, newBrand]);
+  return newBrand;
+};
+
+export const deletePartnerBrand = async (id: string): Promise<boolean> => {
+  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
+    try {
+      await supabase.from('partner_brands').delete().eq('id', id);
+    } catch (e) {
+      console.warn('Error deleting partner_brand from Supabase:', e);
+    }
+  }
+  const localList = getLocalStorage('immortal_partner_brands', defaultPartnerBrands);
+  const filtered = localList.filter((b: PartnerBrand) => b.id !== id);
+  setLocalStorage('immortal_partner_brands', filtered);
+  return true;
+};
+
+export const getB2BContent = async (): Promise<B2BContent> => {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('value')
+        .eq('key', 'b2b_content')
+        .maybeSingle();
+      if (!error && data?.value) {
+        const merged: B2BContent = { ...defaultB2BContent, ...data.value };
+        setLocalStorage('immortal_b2b_content', merged);
+        return merged;
+      }
+    } catch (e) {
+      // Supabase site_settings table may not exist yet, fallback to localStorage
+    }
+  }
+  return getLocalStorage('immortal_b2b_content', defaultB2BContent);
+};
+
+export const updateB2BContent = async (data: Partial<B2BContent>): Promise<B2BContent> => {
+  const current = getLocalStorage('immortal_b2b_content', defaultB2BContent);
+  const updated: B2BContent = { ...current, ...data };
+  setLocalStorage('immortal_b2b_content', updated);
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase
+        .from('site_settings')
+        .upsert({
+          key: 'b2b_content',
+          value: updated,
+          updated_at: new Date().toISOString()
+        });
+    } catch (e) {
+      console.warn('Could not sync b2b_content to Supabase site_settings:', e);
+    }
+  }
+  return updated;
+};
+
 
 export const getInquiries = async (): Promise<Inquiry[]> => {
   if (isSupabaseConfigured && supabase) {
