@@ -155,6 +155,14 @@ export interface B2BContent {
   pitch_deck_url: string;
 }
 
+export interface NavMenuItem {
+  id: string;
+  label: string;
+  path: string;
+  is_visible: boolean;
+  order: number;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -800,6 +808,100 @@ export const updateB2BContent = async (data: Partial<B2BContent>): Promise<B2BCo
   return updated;
 };
 
+
+// --- NAVIGATION MENU MANAGEMENT (HIDE/SHOW) ---
+
+export const defaultNavMenuItems: NavMenuItem[] = [
+  { id: 'programs', label: 'Programs', path: '/programs', is_visible: true, order: 1 },
+  { id: 'gallery', label: 'Art & Music', path: '/gallery', is_visible: true, order: 2 },
+  { id: 'store', label: 'Store', path: '/store', is_visible: true, order: 3 },
+  { id: 'blog', label: 'Blog', path: '/blog', is_visible: true, order: 4 },
+  { id: 'events', label: 'Events', path: '/events', is_visible: true, order: 5 },
+  { id: 'partnership', label: 'Partnership', path: '/partnership', is_visible: true, order: 6 },
+];
+
+export const getNavMenuItems = async (): Promise<NavMenuItem[]> => {
+  let storedItems: NavMenuItem[] | null = null;
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('value')
+        .eq('key', 'nav_menu_items')
+        .maybeSingle();
+      if (!error && data?.value && Array.isArray(data.value)) {
+        storedItems = data.value;
+      }
+    } catch (e) {
+      // Supabase site_settings might not exist yet
+    }
+  }
+
+  if (!storedItems) {
+    storedItems = getLocalStorage('immortal_nav_menus', null);
+  }
+
+  if (!storedItems || !Array.isArray(storedItems) || storedItems.length === 0) {
+    return defaultNavMenuItems;
+  }
+
+  // Ensure all default routes exist in the returned list
+  const itemMap = new Map(storedItems.map(item => [item.id, item]));
+  const merged: NavMenuItem[] = defaultNavMenuItems.map(def => {
+    const existing = itemMap.get(def.id);
+    if (existing) {
+      return {
+        ...def,
+        label: existing.label || def.label,
+        is_visible: existing.is_visible !== undefined ? existing.is_visible : def.is_visible,
+        order: existing.order || def.order
+      };
+    }
+    return def;
+  });
+
+  merged.sort((a, b) => a.order - b.order);
+  return merged;
+};
+
+export const updateNavMenuItems = async (items: NavMenuItem[]): Promise<NavMenuItem[]> => {
+  setLocalStorage('immortal_nav_menus', items);
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('immortal_nav_updated'));
+  }
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase
+        .from('site_settings')
+        .upsert({
+          key: 'nav_menu_items',
+          value: items,
+          updated_at: new Date().toISOString()
+        });
+    } catch (e) {
+      console.warn('Could not sync nav_menu_items to Supabase site_settings:', e);
+    }
+  }
+
+  return items;
+};
+
+export const toggleNavMenuItemVisibility = async (id: string): Promise<NavMenuItem[]> => {
+  const current = await getNavMenuItems();
+  const updated = current.map(item => {
+    if (item.id === id) {
+      return { ...item, is_visible: !item.is_visible };
+    }
+    return item;
+  });
+  return updateNavMenuItems(updated);
+};
+
+export const resetNavMenuItems = async (): Promise<NavMenuItem[]> => {
+  return updateNavMenuItems(defaultNavMenuItems);
+};
 
 export const getInquiries = async (): Promise<Inquiry[]> => {
   if (isSupabaseConfigured && supabase) {

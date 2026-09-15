@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
+import { getNavMenuItems, NavMenuItem, defaultNavMenuItems } from '@/lib/db';
 import { Menu, X, LogIn, User, LogOut, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -13,14 +14,34 @@ export const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const navLinks = [
-    { label: 'Programs', path: '/programs' },
-    { label: 'Art & Music', path: '/gallery' },
-    { label: 'Store', path: '/store' },
-    { label: 'Blog', path: '/blog' },
-    { label: 'Events', path: '/events' },
-    { label: 'Partnership', path: '/partnership' },
-  ];
+  // Dynamic Navigation Menus (Hide/Show support)
+  const [navItems, setNavItems] = useState<NavMenuItem[]>(defaultNavMenuItems);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadMenus = async () => {
+      const items = await getNavMenuItems();
+      if (isMounted) {
+        setNavItems(items);
+      }
+    };
+    loadMenus();
+
+    const handleUpdate = () => {
+      loadMenus();
+    };
+
+    window.addEventListener('immortal_nav_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('immortal_nav_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, []);
+
+  const visibleLinks = navItems.filter((item) => item.is_visible);
 
   const handleLinkClick = () => {
     setMobileMenuOpen(false);
@@ -45,7 +66,7 @@ export const Navbar: React.FC = () => {
 
           {/* Desktop Nav Links */}
           <div className="hidden md:flex md:items-center md:gap-8">
-            {navLinks.map((link) => {
+            {visibleLinks.map((link) => {
               const isActive = pathname.startsWith(link.path);
               return (
                 <Link
@@ -152,7 +173,7 @@ export const Navbar: React.FC = () => {
             className="border-b border-white/5 bg-[#08080a] md:hidden"
           >
             <div className="space-y-1 px-4 pt-2 pb-6">
-              {navLinks.map((link) => {
+              {visibleLinks.map((link) => {
                 const isActive = pathname.startsWith(link.path);
                 return (
                   <Link

@@ -10,19 +10,21 @@ import {
   addArtWork, deleteArtWork, updateArtWork, addBlogPost, deleteBlogPost, updateBlogPost, addEvent, deleteEvent, updateEvent,
   updateInquiryStatus, deleteInquiry, deleteMember, toggleAdminPrivilege, createAdminAccount,
   getPartnerBrands, addPartnerBrand, deletePartnerBrand, getB2BContent, updateB2BContent,
+  getNavMenuItems, updateNavMenuItems, toggleNavMenuItemVisibility, resetNavMenuItems,
   addProduct, deleteProduct, updateProduct, updateOrderStatus, deleteOrder, updateAdminPassword, updateAdminProfile, getAdminPassword,
   // Types
   Program, Episode, ArtWork, MusicTrack, BlogPost, EventItem, Inquiry, UserSession, Product, Order,
-  PartnerBrand, B2BContent, defaultB2BContent, defaultPartnerBrands
+  PartnerBrand, B2BContent, defaultB2BContent, defaultPartnerBrands,
+  NavMenuItem, defaultNavMenuItems
 } from '@/lib/db';
 import { 
   LayoutDashboard, Tv, Music, Image as ImageIcon, Newspaper, Calendar, Mail, Users, 
   Plus, Trash2, Edit, Shield, Eye, ShieldAlert, LogOut, CheckCircle2, UserPlus, FileText,
-  ShoppingBag, ShoppingCart, MessageSquare, Check, DollarSign, Settings, Key, Camera, Upload, Lock, EyeOff, ShieldCheck, RefreshCw, Briefcase, Globe, ExternalLink
+  ShoppingBag, ShoppingCart, MessageSquare, Check, DollarSign, Settings, Key, Camera, Upload, Lock, EyeOff, ShieldCheck, RefreshCw, Briefcase, Globe, ExternalLink, Compass, RotateCcw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-type TabType = 'overview' | 'programs' | 'episodes' | 'music' | 'art' | 'blogs' | 'events' | 'inquiries' | 'members' | 'products' | 'orders' | 'settings';
+type TabType = 'overview' | 'programs' | 'episodes' | 'music' | 'art' | 'blogs' | 'events' | 'inquiries' | 'members' | 'products' | 'orders' | 'menus' | 'settings';
 
 export default function AdminPage() {
   const { user, login, logout } = useApp();
@@ -40,6 +42,9 @@ export default function AdminPage() {
   const [b2bPitchDeckDesc, setB2bPitchDeckDesc] = useState('');
   const [b2bPitchDeckUrl, setB2bPitchDeckUrl] = useState('');
   const [isSavingB2B, setIsSavingB2B] = useState(false);
+
+  // Navigation Menu Management State
+  const [navMenuItems, setNavMenuItems] = useState<NavMenuItem[]>(defaultNavMenuItems);
 
   // Form states for Partner Brands
   const [brandName, setBrandName] = useState('');
@@ -176,6 +181,7 @@ export default function AdminPage() {
     const inquiriesData = await getInquiries();
     const brandsData = await getPartnerBrands();
     const b2bData = await getB2BContent();
+    const menusData = await getNavMenuItems();
     const membersData = await getMembersList();
     const prodsData = await getProducts();
     const ordsData = await getOrders();
@@ -195,6 +201,7 @@ export default function AdminPage() {
     setB2bPitchDeckTitle(b2bData.pitch_deck_title || '');
     setB2bPitchDeckDesc(b2bData.pitch_deck_desc || '');
     setB2bPitchDeckUrl(b2bData.pitch_deck_url || '');
+    setNavMenuItems(menusData);
     setMembers(membersData);
     setProductsList(prodsData);
     setOrdersList(ordsData);
@@ -819,6 +826,23 @@ export default function AdminPage() {
     triggerSuccess(`Brand "${name}" berhasil dihapus.`);
   };
 
+  // --- NAVIGATION MENU HANDLERS ---
+  const handleToggleMenuVisibility = async (id: string) => {
+    // Optimistic UI update
+    setNavMenuItems(prev => prev.map(m => m.id === id ? { ...m, is_visible: !m.is_visible } : m));
+    const updated = await toggleNavMenuItemVisibility(id);
+    setNavMenuItems(updated);
+    const target = updated.find(m => m.id === id);
+    triggerSuccess(`Menu "${target?.label}" sekarang ${target?.is_visible ? 'DITAMPILKAN' : 'DISEMBUNYIKAN'} di header web.`);
+  };
+
+  const handleResetMenus = async () => {
+    if (!confirm('Kembalikan seluruh menu navigasi ke pengaturan awal (semua menu tampil)?')) return;
+    const reset = await resetNavMenuItems();
+    setNavMenuItems(reset);
+    triggerSuccess('Menu navigasi berhasil di-reset ke setelan awal.');
+  };
+
   // 8. Member Actions
   const handleInviteAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1089,6 +1113,7 @@ export default function AdminPage() {
                 { type: 'events', label: 'Events Schedule', icon: Calendar },
                 { type: 'inquiries', label: 'B2B Inquiries', icon: Mail, count: inquiries.filter(i => i.status === 'Pending').length },
                 { type: 'members', label: 'Members Area', icon: Users },
+                { type: 'menus', label: 'Menu Navigasi', icon: Compass },
                 { type: 'settings', label: 'Admin Settings', icon: Settings }
               ].map((tab) => {
                 const Icon = tab.icon;
