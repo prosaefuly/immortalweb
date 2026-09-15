@@ -1205,22 +1205,35 @@ export const logoutMock = (): void => {
 
 // 1. Members Management
 export const getMembersList = async (): Promise<UserSession[]> => {
+  const localMembers = getLocalStorage('immortal_members', mockMembersSeed);
+  const deletedIds = getLocalStorage('immortal_deleted_members', []);
+
   if (isSupabaseConfigured && supabase) {
     const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
     if (!error && data) {
-      return data.map(u => ({
+      const supabaseMembers: UserSession[] = data.map(u => ({
         id: u.id,
         username: u.username,
-        fullName: u.full_name,
-        email: u.email || 'member@immortaldivision.com',
+        fullName: u.full_name || u.username,
+        email: u.email || (u.id === MASTER_ADMIN_ID ? 'admin@immortaldivision.com' : 'member@immortaldivision.com'),
         avatarUrl: u.avatar_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
         bio: u.bio || '',
         isLoggedIn: false,
         isAdmin: u.is_admin || false
       }));
+
+      // Merge locally registered members not yet in Supabase
+      const allMerged = [...supabaseMembers];
+      localMembers.forEach((lm: UserSession) => {
+        if (!allMerged.some(sm => sm.id === lm.id || sm.username === lm.username)) {
+          allMerged.push(lm);
+        }
+      });
+
+      return allMerged.filter(u => !deletedIds.includes(u.id));
     }
   }
-  return getLocalStorage('immortal_members', mockMembersSeed);
+  return localMembers.filter((m: UserSession) => !deletedIds.includes(m.id));
 };
 
 export const addMemberToMockList = (user: UserSession) => {
@@ -1269,12 +1282,25 @@ export const deleteMember = async (id: string): Promise<boolean> => {
     return false;
   }
 
+  // 1. Send delete to Supabase
   if (isSupabaseConfigured && supabase && isValidUUID(id)) {
-    const { error } = await supabase.from('profiles').delete().eq('id', id);
-    if (error) {
-      console.error('Error deleting profile from Supabase:', error);
+    try {
+      const { error } = await supabase.from('profiles').delete().eq('id', id);
+      if (error) {
+        console.error('Error deleting profile from Supabase:', error);
+      }
+    } catch (e) {
+      console.error('Exception deleting profile from Supabase:', e);
     }
   }
+
+  // 2. Track deleted ID in immortal_deleted_members
+  const deletedIds = getLocalStorage('immortal_deleted_members', []);
+  if (!deletedIds.includes(id)) {
+    setLocalStorage('immortal_deleted_members', [...deletedIds, id]);
+  }
+
+  // 3. Remove from immortal_members
   const members = getLocalStorage('immortal_members', mockMembersSeed);
   const filtered = members.filter((m: UserSession) => m.id !== id);
   setLocalStorage('immortal_members', filtered);

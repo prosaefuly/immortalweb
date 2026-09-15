@@ -712,6 +712,8 @@ export default function AdminPage() {
       alert('Hak akses Master Admin utama tidak dapat diubah!');
       return;
     }
+    // Optimistic UI update
+    setMembers(prev => prev.map(m => m.id === id ? { ...m, isAdmin: !m.isAdmin } : m));
     await toggleAdminPrivilege(id);
     triggerSuccess('Hak Akses Admin Diubah.');
     refreshData();
@@ -723,6 +725,8 @@ export default function AdminPage() {
       return;
     }
     if (!confirm('Hapus akun member ini secara permanen?')) return;
+    // Optimistic UI update: remove immediately so it disappears with zero delay
+    setMembers(prev => prev.filter(m => m.id !== id));
     await deleteMember(id);
     triggerSuccess('Akun Member Dihapus.');
     refreshData();
