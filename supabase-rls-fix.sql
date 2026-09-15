@@ -73,3 +73,18 @@ ALTER TABLE public.events DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products DISABLE ROW LEVEL SECURITY;
 
 -- Selesai! Semua fitur kini dapat berinteraksi dengan Supabase Cloud secara lancar.
+
+-- ==========================================
+-- 6. PROFILES TABLE (Member Registry & Admin Management)
+-- ==========================================
+-- Tambahkan kolom email jika belum ada
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS email VARCHAR(255);
+
+-- Lepaskan foreign key ke auth.users agar registrasi member dari web bisa tersimpan langsung
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_id_fkey;
+
+-- Berikan default UUID otomatis untuk ID profil
+ALTER TABLE public.profiles ALTER COLUMN id SET DEFAULT gen_random_uuid();
+
+-- Buka izin CRUD penuh (Select, Insert, Update, Delete) untuk Master Admin dan Member
+ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;

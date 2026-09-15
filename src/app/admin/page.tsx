@@ -708,8 +708,8 @@ export default function AdminPage() {
   };
 
   const handleToggleAdmin = async (id: string) => {
-    if (id === 'admin-master') {
-      alert('Hak akses Master Admin tidak dapat diubah!');
+    if (id === 'admin-master' || id === user.id) {
+      alert('Hak akses Master Admin utama tidak dapat diubah!');
       return;
     }
     await toggleAdminPrivilege(id);
@@ -718,8 +718,8 @@ export default function AdminPage() {
   };
 
   const handleDeleteMember = async (id: string) => {
-    if (id === 'admin-master') {
-      alert('Master Admin tidak dapat dihapus!');
+    if (id === 'admin-master' || id === user.id) {
+      alert('Akun Master Admin utama tidak dapat dihapus!');
       return;
     }
     if (!confirm('Hapus akun member ini secara permanen?')) return;

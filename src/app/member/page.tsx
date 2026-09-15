@@ -48,11 +48,17 @@ export default function MemberPage() {
     loadExclusives();
   }, []);
 
-  const handleGuestSubmit = (e: React.FormEvent) => {
+  const [regError, setRegError] = useState('');
+  const handleGuestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setRegError('');
     if (isSignUp) {
       if (!username || !fullName || !email) return;
-      signup(username, fullName, email, bio);
+      try {
+        await signup(username, fullName, email, bio);
+      } catch (err: any) {
+        setRegError(err.message || 'Pendaftaran gagal.');
+      }
     } else {
       if (!email) return;
       login(email);
@@ -93,6 +99,11 @@ export default function MemberPage() {
               </p>
             </div>
 
+            {regError && (
+              <div className="mb-4 rounded-xl border border-rose-500/20 bg-rose-950/30 p-3 text-xs font-semibold text-rose-400">
+                {regError}
+              </div>
+            )}
             <form onSubmit={handleGuestSubmit} className="space-y-4">
               {isSignUp && (
                 <>

@@ -983,6 +983,76 @@ export const signUpMock = (username: string, fullName: string, email: string, bi
   return newSession;
 };
 
+export const signUpMember = async (username: string, fullName: string, email: string, bio: string): Promise<UserSession> => {
+  const cleanUsername = username.toLowerCase().replace(/\s+/g, '_');
+  const avatarUrl = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80';
+  const newBio = bio || 'Immortal Division community member.';
+  
+  let memberId = '';
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      // 1. Check if username already exists
+      const { data: existing } = await supabase
+        .from('profiles')
+        .select('id, username')
+        .eq('username', cleanUsername)
+        .maybeSingle();
+
+      if (existing) {
+        throw new Error('Username sudah digunakan oleh member lain!');
+      }
+
+      // 2. Insert into profiles table
+      const insertPayload: any = {
+        username: cleanUsername,
+        full_name: fullName,
+        email: email,
+        avatar_url: avatarUrl,
+        bio: newBio,
+        is_admin: false
+      };
+
+      const { data: newProfile, error: insErr } = await supabase
+        .from('profiles')
+        .insert([insertPayload])
+        .select()
+        .single();
+
+      if (!insErr && newProfile) {
+        memberId = newProfile.id;
+      } else {
+        console.error('Error inserting member to Supabase profiles:', insErr);
+      }
+    } catch (e: any) {
+      if (e.message && e.message.includes('Username')) {
+        throw e;
+      }
+      console.error('Exception during member signup in Supabase:', e);
+    }
+  }
+
+  if (!memberId) {
+    memberId = `user-${Date.now()}`;
+  }
+
+  const newSession: UserSession = {
+    id: memberId,
+    username: cleanUsername,
+    fullName,
+    email,
+    avatarUrl,
+    bio: newBio,
+    isLoggedIn: true,
+    isAdmin: false
+  };
+
+  setLocalStorage('immortal_session', newSession);
+  addMemberToMockList(newSession);
+
+  return newSession;
+};
+
 export const getAdminPassword = (): string => {
   return getLocalStorage('immortal_admin_password', 'PastiSukses');
 };
@@ -1163,20 +1233,21 @@ export const addMemberToMockList = (user: UserSession) => {
 };
 
 export const createAdminAccount = async (data: Omit<UserSession, 'id' | 'isLoggedIn' | 'isAdmin'>): Promise<boolean> => {
-  // Profiles in Supabase reference auth.users. Usually admin accounts are created via Supabase Auth.
-  // In the panel, we can fallback to mock if direct SQL profiles insert isn't fully allowed due to Auth triggers,
-  // but let's try inserting into profiles table if they are registered:
   if (isSupabaseConfigured && supabase) {
-    // Note: Creating user account requires supabase.auth.signUp or service role triggers.
-    // So for master dashboard, we fallback to localStorage for simple mock admins if auth is not connected,
-    // but if profile can be inserted:
-    const { error } = await supabase.from('profiles').insert([{
-      username: data.username,
-      full_name: data.fullName,
-      bio: data.bio,
-      is_admin: true
-    }]);
-    if (!error) return true;
+    try {
+      const { error } = await supabase.from('profiles').insert([{
+        username: data.username,
+        full_name: data.fullName,
+        email: data.email,
+        avatar_url: data.avatarUrl,
+        bio: data.bio,
+        is_admin: true
+      }]);
+      if (!error) return true;
+      console.error('Error creating admin in Supabase profiles:', error);
+    } catch (e) {
+      console.error('Exception creating admin account:', e);
+    }
   }
   const members = getLocalStorage('immortal_members', mockMembersSeed);
   const exists = members.find((m: UserSession) => m.email === data.email);
@@ -1193,10 +1264,16 @@ export const createAdminAccount = async (data: Omit<UserSession, 'id' | 'isLogge
 };
 
 export const deleteMember = async (id: string): Promise<boolean> => {
+  // Never delete master admin
+  if (id === MASTER_ADMIN_ID || id === 'admin-master') {
+    return false;
+  }
+
   if (isSupabaseConfigured && supabase && isValidUUID(id)) {
     const { error } = await supabase.from('profiles').delete().eq('id', id);
-    if (!error) return true;
-    console.error('Error deleting profile from Supabase:', error);
+    if (error) {
+      console.error('Error deleting profile from Supabase:', error);
+    }
   }
   const members = getLocalStorage('immortal_members', mockMembersSeed);
   const filtered = members.filter((m: UserSession) => m.id !== id);
@@ -1211,30 +1288,28 @@ export const deleteMember = async (id: string): Promise<boolean> => {
 };
 
 export const toggleAdminPrivilege = async (id: string): Promise<boolean> => {
-  const members = getLocalStorage('immortal_members', mockMembersSeed);
+  if (id === MASTER_ADMIN_ID || id === 'admin-master') {
+    return false;
+  }
+
+  const members = await getMembersList();
   const m = members.find((u: any) => u.id === id);
-  const newAdminStatus = m ? !m.is_admin : true;
+  const newAdminStatus = m ? !m.isAdmin : true;
 
   if (isSupabaseConfigured && supabase && isValidUUID(id)) {
     const { error } = await supabase.from('profiles').update({ is_admin: newAdminStatus }).eq('id', id);
-    if (!error) {
-      const active = getCurrentUserSession();
-      if (active.id === id) {
-        const activeUpdated = { ...active, isAdmin: newAdminStatus };
-        setLocalStorage('immortal_session', activeUpdated);
-      }
-      return true;
+    if (error) {
+      console.error('Error toggling admin status in Supabase:', error);
     }
-    console.error('Error toggling admin status in Supabase:', error);
   }
 
-  const updated = members.map((m: UserSession) => m.id === id ? { ...m, isAdmin: !m.isAdmin } : m);
+  const localMembers = getLocalStorage('immortal_members', mockMembersSeed);
+  const updated = localMembers.map((mem: UserSession) => mem.id === id ? { ...mem, isAdmin: newAdminStatus } : mem);
   setLocalStorage('immortal_members', updated);
 
-  // Sync to active session if matching
   const active = getCurrentUserSession();
   if (active.id === id) {
-    const activeUpdated = { ...active, isAdmin: !active.isAdmin };
+    const activeUpdated = { ...active, isAdmin: newAdminStatus };
     setLocalStorage('immortal_session', activeUpdated);
   }
   return true;

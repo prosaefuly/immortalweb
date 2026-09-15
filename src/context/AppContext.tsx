@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import { 
   getCurrentUserSession, 
   signUpMock, 
+  signUpMember, 
   loginMock, 
   logoutMock, 
   updateProfileMock, 
@@ -15,7 +16,7 @@ interface AppContextProps {
   // Auth State
   user: UserSession;
   login: (email: string, password?: string) => void;
-  signup: (username: string, fullName: string, email: string, bio: string) => void;
+  signup: (username: string, fullName: string, email: string, bio: string) => Promise<UserSession>;
   logout: () => void;
   updateProfile: (data: Partial<Omit<UserSession, 'id' | 'isLoggedIn'>>) => void;
   showAuthModal: boolean;
@@ -130,10 +131,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setShowAuthModal(false);
   };
 
-  const handleSignup = (username: string, fullName: string, email: string, bio: string) => {
-    const session = signUpMock(username, fullName, email, bio);
+  const handleSignup = async (username: string, fullName: string, email: string, bio: string) => {
+    const session = await signUpMember(username, fullName, email, bio);
     setUser(session);
     setShowAuthModal(false);
+    return session;
   };
 
   const handleLogout = () => {
