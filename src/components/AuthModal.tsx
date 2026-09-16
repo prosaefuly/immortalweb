@@ -13,24 +13,37 @@ export const AuthModal: React.FC = () => {
   const [username, setUsername] = useState('');
   const [fullName, setFullName] = useState('');
   const [bio, setBio] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
   if (!showAuthModal) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSignUp) {
-      if (!username || !fullName || !email) return;
-      signup(username, fullName, email, bio);
-    } else {
-      if (!email || !password) return;
-      login(email);
+    setErrorMsg('');
+    try {
+      if (isSignUp) {
+        if (!username || !email || !password) {
+          setErrorMsg('Username, email, dan password wajib diisi.');
+          return;
+        }
+        await signup(username, fullName || username, email, bio, password);
+      } else {
+        if (!email || !password) {
+          setErrorMsg('Email dan password wajib diisi.');
+          return;
+        }
+        login(email, password);
+      }
+      // Reset forms
+      setEmail('');
+      setPassword('');
+      setUsername('');
+      setFullName('');
+      setBio('');
+      setErrorMsg('');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Proses autentikasi gagal.');
     }
-    // Reset forms
-    setEmail('');
-    setPassword('');
-    setUsername('');
-    setFullName('');
-    setBio('');
   };
 
   const handleGoogleMock = () => {
@@ -81,6 +94,13 @@ export const AuthModal: React.FC = () => {
             </p>
           </div>
 
+          {/* Error Message */}
+          {errorMsg && (
+            <div className="mb-4 rounded-xl border border-rose-500/20 bg-rose-950/30 p-3 text-xs font-semibold text-rose-400">
+              {errorMsg}
+            </div>
+          )}
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
@@ -101,13 +121,12 @@ export const AuthModal: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">Full Name</label>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">Nama Lengkap</label>
                   <div className="relative">
                     <User className="absolute top-1/2 left-3 -translate-y-1/2 text-muted" size={16} />
                     <input
                       type="text"
-                      required
-                      placeholder="e.g. Joko Prabowo"
+                      placeholder="e.g. Joko Prabowo (opsional)"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       className="w-full rounded-lg border border-white/10 bg-black/40 py-2.5 pr-4 pl-10 text-white outline-none placeholder:text-neutral-600 focus:border-primary/50"
@@ -118,13 +137,15 @@ export const AuthModal: React.FC = () => {
             )}
 
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">Email Address</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">
+                {isSignUp ? 'Alamat Email' : 'Email atau Username'}
+              </label>
               <div className="relative">
                 <Mail className="absolute top-1/2 left-3 -translate-y-1/2 text-muted" size={16} />
                 <input
-                  type="email"
+                  type="text"
                   required
-                  placeholder="name@example.com"
+                  placeholder={isSignUp ? 'name@example.com' : 'name@example.com atau username'}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full rounded-lg border border-white/10 bg-black/40 py-2.5 pr-4 pl-10 text-white outline-none placeholder:text-neutral-600 focus:border-primary/50"
@@ -196,7 +217,10 @@ export const AuthModal: React.FC = () => {
           <p className="mt-6 text-center text-sm text-muted">
             {isSignUp ? 'Already a member?' : "Don't have an account?"}{' '}
             <button
-              onClick={() => setIsSignUp(!isSignUp)}
+              onClick={() => {
+                setIsSignUp(!isSignUp);
+                setErrorMsg('');
+              }}
               className="font-bold text-primary transition hover:underline"
             >
               {isSignUp ? 'Sign In Now' : 'Sign Up Free'}

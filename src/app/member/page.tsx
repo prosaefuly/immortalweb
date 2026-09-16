@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { getEpisodes, getBlogPosts, Episode, BlogPost } from '@/lib/db';
-import { User, LogOut, Edit3, Save, Sparkles, Lock, Play, Newspaper, CheckCircle } from 'lucide-react';
+import { User, LogOut, Edit3, Save, Sparkles, Lock, Play, Newspaper, CheckCircle, Camera, Upload, Eye, EyeOff, Image as ImageIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 
@@ -15,13 +15,26 @@ export default function MemberPage() {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [fullName, setFullName] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [bio, setBio] = useState('');
 
   // Dashboard edit local states
   const [editMode, setEditMode] = useState(false);
+  const [editAvatarUrl, setEditAvatarUrl] = useState('');
   const [editFullName, setEditFullName] = useState('');
   const [editBio, setEditBio] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  const avatarPresets = [
+    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80'
+  ];
 
   // Exclusive contents states
   const [exclusiveEps, setExclusiveEps] = useState<Episode[]>([]);
@@ -30,8 +43,9 @@ export default function MemberPage() {
   // Sync edit fields when user status loaded
   useEffect(() => {
     if (user.isLoggedIn) {
-      setEditFullName(user.fullName);
-      setEditBio(user.bio);
+      setEditFullName(user.fullName || '');
+      setEditBio(user.bio || '');
+      setEditAvatarUrl(user.avatarUrl || '');
     }
   }, [user]);
 
@@ -49,31 +63,68 @@ export default function MemberPage() {
   }, []);
 
   const [regError, setRegError] = useState('');
+
+  const handleAvatarFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      setSaveError('Ukuran file foto maksimal 2MB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        setEditAvatarUrl(reader.result);
+        setSaveError('');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleGuestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setRegError('');
     if (isSignUp) {
-      if (!username || !fullName || !email) return;
+      if (!username || !email || !password) {
+        setRegError('Username, email, dan password wajib diisi.');
+        return;
+      }
       try {
-        await signup(username, fullName, email, bio);
+        await signup(username, fullName || username, email, bio, password);
       } catch (err: any) {
         setRegError(err.message || 'Pendaftaran gagal.');
       }
     } else {
-      if (!email) return;
-      login(email);
+      if (!email || !password) {
+        setRegError('Email/username dan password wajib diisi.');
+        return;
+      }
+      try {
+        login(email, password);
+      } catch (err: any) {
+        setRegError(err.message || 'Login gagal.');
+      }
     }
   };
 
-  const handleProfileSave = (e: React.FormEvent) => {
+  const handleProfileSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateProfile({
-      fullName: editFullName,
-      bio: editBio
-    });
-    setEditMode(false);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 3000);
+    setSaveError('');
+    setIsSaving(true);
+    try {
+      await updateProfile({
+        fullName: editFullName,
+        bio: editBio,
+        avatarUrl: editAvatarUrl
+      });
+      setEditMode(false);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3500);
+    } catch (err: any) {
+      setSaveError(err.message || 'Gagal menyimpan profil.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (!user.isLoggedIn) {
@@ -105,73 +156,145 @@ export default function MemberPage() {
               </div>
             )}
             <form onSubmit={handleGuestSubmit} className="space-y-4">
-              {isSignUp && (
+              {isSignUp ? (
                 <>
                   <div>
-                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">Username</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="username"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none focus:border-primary/50"
-                    />
+                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">
+                      Username <span className="text-primary">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. joko_beat (wajib)"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none focus:border-primary/50"
+                      />
+                    </div>
+                    <p className="mt-1 text-[10px] text-neutral-500">Username unik untuk identitas member dan diskusi.</p>
                   </div>
+
                   <div>
-                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">Nama Lengkap</label>
+                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">
+                      Nama Lengkap
+                    </label>
                     <input
                       type="text"
-                      required
-                      placeholder="Joko Prabowo"
+                      placeholder="e.g. Joko Prabowo (opsional)"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none focus:border-primary/50"
                     />
                   </div>
+
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">
+                      Email <span className="text-primary">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="name@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none focus:border-primary/50"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">
+                      Password <span className="text-primary">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 pr-10 px-4 text-xs text-white outline-none focus:border-primary/50"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white"
+                      >
+                        {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">Bio Singkat</label>
+                    <textarea
+                      placeholder="Ceritakan ketertarikan musik Anda..."
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      rows={2}
+                      className="w-full rounded-xl border border-white/10 bg-black/40 p-4 text-xs text-white outline-none focus:border-primary/50 resize-none"
+                    />
+                  </div>
                 </>
-              )}
+              ) : (
+                <>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">
+                      Email atau Username <span className="text-primary">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="name@example.com atau username"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none focus:border-primary/50"
+                    />
+                  </div>
 
-              <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">Email</label>
-                <input
-                  type="email"
-                  required
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none focus:border-primary/50"
-                />
-              </div>
-
-              {isSignUp && (
-                <div>
-                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">Bio Singkat</label>
-                  <textarea
-                    placeholder="Saya pencinta audio analog..."
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
-                    rows={2}
-                    className="w-full rounded-xl border border-white/10 bg-black/40 p-4 text-xs text-white outline-none focus:border-primary/50 resize-none"
-                  />
-                </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">
+                      Password <span className="text-primary">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 pr-10 px-4 text-xs text-white outline-none focus:border-primary/50"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white"
+                      >
+                        {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
+                    </div>
+                  </div>
+                </>
               )}
 
               <button
                 type="submit"
                 className="w-full cursor-pointer rounded-xl bg-primary py-3.5 font-bold uppercase tracking-widest text-white shadow-lg shadow-primary/20 transition hover:scale-102 active:scale-98"
               >
-                {isSignUp ? 'Buat Akun Member' : 'Sign In Portal'}
+                {isSignUp ? 'Daftar Sebagai Member' : 'Masuk ke Portal Member'}
               </button>
             </form>
 
             <p className="mt-6 text-center text-xs text-muted">
-              {isSignUp ? 'Sudah terdaftar?' : 'Belum bergabung?'}{' '}
+              {isSignUp ? 'Sudah memiliki akun?' : 'Belum bergabung menjadi member?'}{' '}
               <button
-                onClick={() => setIsSignUp(!isSignUp)}
+                onClick={() => {
+                  setIsSignUp(!isSignUp);
+                  setRegError('');
+                }}
                 className="font-bold text-primary hover:underline"
               >
-                {isSignUp ? 'Sign In' : 'Daftar Gratis'}
+                {isSignUp ? 'Sign In' : 'Daftar Akun Baru'}
               </button>
             </p>
           </motion.div>
@@ -214,14 +337,89 @@ export default function MemberPage() {
                 {/* Edit Toggle Button */}
                 {!editMode ? (
                   <button
-                    onClick={() => setEditMode(true)}
+                    onClick={() => {
+                      setEditMode(true);
+                      setEditAvatarUrl(user.avatarUrl || '');
+                      setEditFullName(user.fullName || '');
+                      setEditBio(user.bio || '');
+                      setSaveError('');
+                    }}
                     className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-white/5 py-2.5 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-white/10"
                   >
                     <Edit3 size={12} />
-                    <span>Edit Profile bio</span>
+                    <span>Edit Foto Profil & Bio</span>
                   </button>
                 ) : (
-                  <form onSubmit={handleProfileSave} className="space-y-3 text-left pt-2">
+                  <form onSubmit={handleProfileSave} className="space-y-4 text-left pt-3 border-t border-white/5">
+                    {saveError && (
+                      <div className="rounded-xl border border-rose-500/20 bg-rose-950/30 p-2.5 text-[11px] font-semibold text-rose-400">
+                        {saveError}
+                      </div>
+                    )}
+
+                    {/* Photo Profile Section */}
+                    <div>
+                      <label className="mb-2 block text-[10px] font-semibold uppercase tracking-wider text-muted">
+                        Ubah Foto Profil
+                      </label>
+
+                      {/* Live Avatar Preview */}
+                      <div className="flex items-center gap-3 mb-3">
+                        <img
+                          src={editAvatarUrl || user.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
+                          alt="Preview Avatar"
+                          className="h-16 w-16 rounded-full object-cover border-2 border-primary/50 shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <input
+                            type="file"
+                            id="member-avatar-file"
+                            accept="image/png,image/jpeg,image/webp,image/jpg"
+                            onChange={handleAvatarFile}
+                            className="hidden"
+                          />
+                          <label
+                            htmlFor="member-avatar-file"
+                            className="flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 py-2 px-3 text-[11px] font-bold text-white hover:bg-white/10 hover:border-primary/40 transition"
+                          >
+                            <Upload size={12} className="text-primary" />
+                            <span>Pilih Gambar Perangkat</span>
+                          </label>
+                          <span className="block text-[9px] text-neutral-500 mt-1">Format .jpg, .png, .webp (Maks 2MB)</span>
+                        </div>
+                      </div>
+
+                      {/* URL input */}
+                      <div className="mb-2">
+                        <input
+                          type="text"
+                          placeholder="Atau tempel link URL foto..."
+                          value={editAvatarUrl}
+                          onChange={(e) => setEditAvatarUrl(e.target.value)}
+                          className="w-full rounded-lg border border-white/10 bg-black/60 py-2 px-3 text-xs text-white outline-none focus:border-primary/50"
+                        />
+                      </div>
+
+                      {/* Presets */}
+                      <div>
+                        <span className="text-[9px] uppercase tracking-wider text-neutral-500 block mb-1.5">Atau Pilih Preset Avatar:</span>
+                        <div className="flex gap-2">
+                          {avatarPresets.map((preset, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => setEditAvatarUrl(preset)}
+                              className={`h-8 w-8 rounded-full overflow-hidden border-2 transition ${
+                                editAvatarUrl === preset ? 'border-primary scale-110' : 'border-transparent opacity-60 hover:opacity-100'
+                              }`}
+                            >
+                              <img src={preset} alt={`Preset ${idx + 1}`} className="h-full w-full object-cover" />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
                     <div>
                       <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">Nama Lengkap</label>
                       <input
@@ -232,29 +430,36 @@ export default function MemberPage() {
                         className="w-full rounded-lg border border-white/10 bg-black/60 py-2 px-3 text-xs text-white outline-none focus:border-primary/50"
                       />
                     </div>
+
                     <div>
                       <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">Bio Singkat</label>
                       <textarea
                         value={editBio}
                         onChange={(e) => setEditBio(e.target.value)}
-                        rows={2}
+                        rows={3}
+                        placeholder="Tuliskan bio profil Anda..."
                         className="w-full rounded-lg border border-white/10 bg-black/60 p-3 text-xs text-white outline-none focus:border-primary/50 resize-none"
                       />
                     </div>
-                    <div className="flex gap-2">
+
+                    <div className="flex gap-2 pt-1">
                       <button
                         type="submit"
-                        className="flex-1 flex cursor-pointer items-center justify-center gap-1 rounded-lg bg-primary py-2 text-xs font-bold text-white hover:bg-primary-hover"
+                        disabled={isSaving}
+                        className="flex-1 flex cursor-pointer items-center justify-center gap-1 rounded-lg bg-primary py-2.5 text-xs font-bold uppercase tracking-wider text-white hover:bg-primary-hover disabled:opacity-50"
                       >
                         <Save size={12} />
-                        <span>Save</span>
+                        <span>{isSaving ? 'Menyimpan...' : 'Simpan Profil'}</span>
                       </button>
                       <button
                         type="button"
-                        onClick={() => setEditMode(false)}
-                        className="rounded-lg bg-white/5 px-3 py-2 text-xs font-bold text-neutral-400 hover:bg-white/10 hover:text-white"
+                        onClick={() => {
+                          setEditMode(false);
+                          setSaveError('');
+                        }}
+                        className="rounded-lg bg-white/5 px-4 py-2.5 text-xs font-bold uppercase text-neutral-400 hover:bg-white/10 hover:text-white"
                       >
-                        Cancel
+                        Batal
                       </button>
                     </div>
                   </form>

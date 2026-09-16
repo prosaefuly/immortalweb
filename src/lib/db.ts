@@ -1263,31 +1263,64 @@ export const signUpMock = (username: string, fullName: string, email: string, bi
   return newSession;
 };
 
-export const signUpMember = async (username: string, fullName: string, email: string, bio: string): Promise<UserSession> => {
-  const cleanUsername = username.toLowerCase().replace(/\s+/g, '_');
+export const signUpMember = async (
+  username: string, 
+  fullName: string, 
+  email: string, 
+  bio?: string, 
+  password?: string
+): Promise<UserSession> => {
+  const cleanUsername = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_');
+  if (!cleanUsername) {
+    throw new Error('Username tidak boleh kosong!');
+  }
+  const cleanEmail = email.trim().toLowerCase();
+  if (!cleanEmail) {
+    throw new Error('Email tidak boleh kosong!');
+  }
   const avatarUrl = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80';
   const newBio = bio || 'Immortal Division community member.';
-  
+  const finalFullName = fullName?.trim() || cleanUsername;
+
+  // 1. Check existing in local members
+  const localMembers = getLocalStorage('immortal_members', mockMembersSeed);
+  if (localMembers.some((m: UserSession) => m.username.toLowerCase() === cleanUsername)) {
+    throw new Error('Username sudah digunakan oleh member lain!');
+  }
+  if (localMembers.some((m: UserSession) => m.email.toLowerCase() === cleanEmail)) {
+    throw new Error('Email sudah terdaftar sebagai member!');
+  }
+
   let memberId = '';
 
   if (isSupabaseConfigured && supabase) {
     try {
-      // 1. Check if username already exists
-      const { data: existing } = await supabase
+      // Check if username or email already exists in Supabase profiles
+      const { data: existingUser } = await supabase
         .from('profiles')
         .select('id, username')
         .eq('username', cleanUsername)
         .maybeSingle();
 
-      if (existing) {
+      if (existingUser) {
         throw new Error('Username sudah digunakan oleh member lain!');
       }
 
-      // 2. Insert into profiles table
+      const { data: existingEmail } = await supabase
+        .from('profiles')
+        .select('id, email')
+        .eq('email', cleanEmail)
+        .maybeSingle();
+
+      if (existingEmail) {
+        throw new Error('Email sudah terdaftar sebagai member!');
+      }
+
+      // Insert into profiles table
       const insertPayload: any = {
         username: cleanUsername,
-        full_name: fullName,
-        email: email,
+        full_name: finalFullName,
+        email: cleanEmail,
         avatar_url: avatarUrl,
         bio: newBio,
         is_admin: false
@@ -1305,7 +1338,7 @@ export const signUpMember = async (username: string, fullName: string, email: st
         console.error('Error inserting member to Supabase profiles:', insErr);
       }
     } catch (e: any) {
-      if (e.message && e.message.includes('Username')) {
+      if (e.message && (e.message.includes('Username') || e.message.includes('Email'))) {
         throw e;
       }
       console.error('Exception during member signup in Supabase:', e);
@@ -1316,11 +1349,19 @@ export const signUpMember = async (username: string, fullName: string, email: st
     memberId = `user-${Date.now()}`;
   }
 
+  // Save member password if provided
+  if (password) {
+    const passwords = getLocalStorage('immortal_member_passwords', {});
+    passwords[cleanEmail] = password;
+    passwords[cleanUsername] = password;
+    setLocalStorage('immortal_member_passwords', passwords);
+  }
+
   const newSession: UserSession = {
     id: memberId,
     username: cleanUsername,
-    fullName,
-    email,
+    fullName: finalFullName,
+    email: cleanEmail,
     avatarUrl,
     bio: newBio,
     isLoggedIn: true,
@@ -1413,11 +1454,13 @@ export const updateAdminProfile = async (data: {
   return updatedSession;
 };
 
-export const loginMock = (email: string, password?: string): UserSession => {
+export const loginMock = (emailOrUsername: string, password?: string): UserSession => {
+  const input = emailOrUsername.trim().toLowerCase();
+
   // Check master admin credentials
-  if (email === 'admin@immortaldivision.com') {
+  if (input === 'admin@immortaldivision.com' || input === 'master_admin') {
     const validPassword = getAdminPassword();
-    if (password !== validPassword) {
+    if (password && password !== validPassword) {
       throw new Error('Password Master Admin salah!');
     }
     const adminSession: UserSession = {
@@ -1435,33 +1478,81 @@ export const loginMock = (email: string, password?: string): UserSession => {
     return adminSession;
   }
 
+  // Check passwords storage if password is provided
+  if (password) {
+    const passwords = getLocalStorage('immortal_member_passwords', {});
+    const expected = passwords[input];
+    if (expected && expected !== password) {
+      throw new Error('Password yang Anda masukkan salah!');
+    }
+  }
+
   // Check if member already exists in local list
   const members = getLocalStorage('immortal_members', mockMembersSeed);
-  const found = members.find((m: UserSession) => m.email === email);
+  const found = members.find((m: UserSession) => 
+    m.email.toLowerCase() === input || m.username.toLowerCase() === input
+  );
   
-  let newSession: UserSession;
   if (found) {
-    newSession = {
+    const newSession: UserSession = {
       ...found,
       isLoggedIn: true
     };
-  } else {
-    // Fallback automatic signin
-    newSession = {
-      id: `user-${Date.now()}`,
-      username: 'immortal_listener',
-      fullName: 'Joko Prabowo',
-      email: email,
-      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-      bio: 'Dedicated crate digger and live gig reviewer.',
-      isLoggedIn: true,
-      isAdmin: false
-    };
-    addMemberToMockList(newSession);
+    setLocalStorage('immortal_session', newSession);
+    return newSession;
   }
 
-  setLocalStorage('immortal_session', newSession);
-  return newSession;
+  // If not found in local list, check if user exists with this username/email fallback
+  throw new Error('Akun member tidak ditemukan. Silakan lakukan pendaftaran terlebih dahulu.');
+};
+
+export const updateMemberProfile = async (
+  data: Partial<Omit<UserSession, 'id' | 'isLoggedIn'>>
+): Promise<UserSession> => {
+  const current = getCurrentUserSession();
+  const updatedFullName = data.fullName !== undefined ? data.fullName : current.fullName;
+  const updatedAvatarUrl = data.avatarUrl !== undefined ? data.avatarUrl : current.avatarUrl;
+  const updatedBio = data.bio !== undefined ? data.bio : current.bio;
+  const updatedUsername = data.username !== undefined ? data.username : current.username;
+
+  const updatedSession: UserSession = {
+    ...current,
+    fullName: updatedFullName,
+    avatarUrl: updatedAvatarUrl,
+    bio: updatedBio,
+    username: updatedUsername
+  };
+
+  setLocalStorage('immortal_session', updatedSession);
+
+  // Sync to members list
+  const members = getLocalStorage('immortal_members', mockMembersSeed);
+  const syncedMembers = members.map((m: UserSession) => 
+    (m.id === current.id || m.email === current.email) 
+      ? { ...m, fullName: updatedFullName, avatarUrl: updatedAvatarUrl, bio: updatedBio, username: updatedUsername }
+      : m
+  );
+  setLocalStorage('immortal_members', syncedMembers);
+
+  // Sync to Supabase profiles
+  if (isSupabaseConfigured && supabase && isValidUUID(current.id)) {
+    try {
+      const updateData: any = {};
+      if (data.fullName !== undefined) updateData.full_name = data.fullName;
+      if (data.avatarUrl !== undefined) updateData.avatar_url = data.avatarUrl;
+      if (data.bio !== undefined) updateData.bio = data.bio;
+      if (data.username !== undefined) updateData.username = data.username;
+
+      const { error } = await supabase.from('profiles').update(updateData).eq('id', current.id);
+      if (error) {
+        console.error('Error updating profile in Supabase:', error);
+      }
+    } catch (err) {
+      console.error('Exception updating profile in Supabase:', err);
+    }
+  }
+
+  return updatedSession;
 };
 
 export const updateProfileMock = (data: Partial<Omit<UserSession, 'id' | 'isLoggedIn'>>): UserSession => {
@@ -1471,8 +1562,18 @@ export const updateProfileMock = (data: Partial<Omit<UserSession, 'id' | 'isLogg
   
   // Sync to members list
   const members = getLocalStorage('immortal_members', mockMembersSeed);
-  const syncedMembers = members.map((m: UserSession) => m.id === current.id ? { ...m, ...data } : m);
+  const syncedMembers = members.map((m: UserSession) => (m.id === current.id || m.email === current.email) ? { ...m, ...data } : m);
   setLocalStorage('immortal_members', syncedMembers);
+
+  // Sync to Supabase in background
+  if (isSupabaseConfigured && supabase && isValidUUID(current.id)) {
+    const updateData: any = {};
+    if (data.fullName !== undefined) updateData.full_name = data.fullName;
+    if (data.avatarUrl !== undefined) updateData.avatar_url = data.avatarUrl;
+    if (data.bio !== undefined) updateData.bio = data.bio;
+    if (data.username !== undefined) updateData.username = data.username;
+    supabase.from('profiles').update(updateData).eq('id', current.id).then();
+  }
 
   return updated;
 };

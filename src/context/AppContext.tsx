@@ -8,6 +8,7 @@ import {
   loginMock, 
   logoutMock, 
   updateProfileMock, 
+  updateMemberProfile,
   UserSession, 
   MusicTrack 
 } from '@/lib/db';
@@ -15,10 +16,10 @@ import {
 interface AppContextProps {
   // Auth State
   user: UserSession;
-  login: (email: string, password?: string) => void;
-  signup: (username: string, fullName: string, email: string, bio: string) => Promise<UserSession>;
+  login: (emailOrUsername: string, password?: string) => void;
+  signup: (username: string, fullName: string, email: string, bio?: string, password?: string) => Promise<UserSession>;
   logout: () => void;
-  updateProfile: (data: Partial<Omit<UserSession, 'id' | 'isLoggedIn'>>) => void;
+  updateProfile: (data: Partial<Omit<UserSession, 'id' | 'isLoggedIn'>>) => Promise<UserSession>;
   showAuthModal: boolean;
   setShowAuthModal: (show: boolean) => void;
   
@@ -125,14 +126,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [volume]);
 
   // Auth Methods
-  const handleLogin = (email: string, password?: string) => {
-    const session = loginMock(email, password);
+  const handleLogin = (emailOrUsername: string, password?: string) => {
+    const session = loginMock(emailOrUsername, password);
     setUser(session);
     setShowAuthModal(false);
   };
 
-  const handleSignup = async (username: string, fullName: string, email: string, bio: string) => {
-    const session = await signUpMember(username, fullName, email, bio);
+  const handleSignup = async (username: string, fullName: string, email: string, bio?: string, password?: string) => {
+    const session = await signUpMember(username, fullName, email, bio, password);
     setUser(session);
     setShowAuthModal(false);
     return session;
@@ -152,9 +153,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  const handleUpdateProfile = (data: Partial<Omit<UserSession, 'id' | 'isLoggedIn'>>) => {
-    const session = updateProfileMock(data);
+  const handleUpdateProfile = async (data: Partial<Omit<UserSession, 'id' | 'isLoggedIn'>>) => {
+    const session = await updateMemberProfile(data);
     setUser(session);
+    return session;
   };
 
   // Audio Methods
