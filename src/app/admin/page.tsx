@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { 
   // Read APIs
-  getPrograms, getEpisodes, getArtWorks, getMusicTracks, getBlogPosts, getEvents, getInquiries, getMembersList, getProducts, getOrders,
+  getPrograms, getEpisodes, getComments, deleteComment, Comment, getArtWorks, getMusicTracks, getBlogPosts, getEvents, getInquiries, getMembersList, getProducts, getOrders,
   // Mutation APIs
   addProgram, deleteProgram, updateProgram, extractYouTubeId, addEpisode, deleteEpisode, updateEpisode, addMusicTrack, deleteMusicTrack, updateMusicTrack,
   addArtWork, deleteArtWork, updateArtWork, addBlogPost, deleteBlogPost, updateBlogPost, addEvent, deleteEvent, updateEvent,
@@ -20,9 +20,10 @@ import {
 import { 
   LayoutDashboard, Tv, Music, Image as ImageIcon, Newspaper, Calendar, Mail, Users, 
   Plus, Trash2, Edit, Shield, Eye, ShieldAlert, LogOut, CheckCircle2, UserPlus, FileText,
-  ShoppingBag, ShoppingCart, MessageSquare, Check, DollarSign, Settings, Key, Camera, Upload, Lock, EyeOff, ShieldCheck, RefreshCw, Briefcase, Globe, ExternalLink, Compass, RotateCcw
+  ShoppingBag, ShoppingCart, MessageSquare, Check, MapPin, Video, DollarSign, Settings, Key, Camera, Upload, Lock, EyeOff, ShieldCheck, RefreshCw, Briefcase, Globe, ExternalLink, Compass, RotateCcw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { RichTextEditor } from '@/components/RichTextEditor';
 
 type TabType = 'overview' | 'programs' | 'episodes' | 'music' | 'art' | 'blogs' | 'events' | 'inquiries' | 'members' | 'products' | 'orders' | 'menus' | 'settings';
 
@@ -146,11 +147,22 @@ export default function AdminPage() {
   const [evtTitle, setEvtTitle] = useState('');
   const [evtDesc, setEvtDesc] = useState('');
   const [evtLocation, setEvtLocation] = useState('');
-  const [evtDate, setEvtDate] = useState('');
+  const [evtMapsUrl, setEvtMapsUrl] = useState('');
+  const [evtStartDate, setEvtStartDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [evtStartTime, setEvtStartTime] = useState('19:00');
+  const [evtEndTime, setEvtEndTime] = useState('22:00');
   const [evtCover, setEvtCover] = useState('');
   const [evtTicket, setEvtTicket] = useState('');
   const [evtPrice, setEvtPrice] = useState('Free');
   const [evtOnline, setEvtOnline] = useState(false);
+  const [evtGalleryMedia, setEvtGalleryMedia] = useState<Array<{ type: 'image' | 'video'; url: string }>>([]);
+  const [mediaInputUrl, setMediaInputUrl] = useState('');
+  const [mediaInputType, setMediaInputType] = useState<'image' | 'video'>('video');
+
+  // Event Comments Management Modal States
+  const [selectedEventForComments, setSelectedEventForComments] = useState<EventItem | null>(null);
+  const [eventCommentsList, setEventCommentsList] = useState<Comment[]>([]);
+  const [isLoadingEventComments, setIsLoadingEventComments] = useState(false);
 
   // 7. Invite Admin Form
   const [newAdminEmail, setNewAdminEmail] = useState('');
@@ -638,19 +650,66 @@ export default function AdminPage() {
   };
 
   // 6. Event CRUD
+  const handleEventCoverFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        setEvtCover(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAddMediaItem = () => {
+    if (!mediaInputUrl.trim()) return;
+    setEvtGalleryMedia(prev => [...prev, { type: mediaInputType, url: mediaInputUrl.trim() }]);
+    setMediaInputUrl('');
+  };
+
+  const handleRemoveMediaItem = (index: number) => {
+    setEvtGalleryMedia(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleOpenEventComments = async (evt: EventItem) => {
+    setSelectedEventForComments(evt);
+    setIsLoadingEventComments(true);
+    const comms = await getComments({ eventId: evt.id });
+    setEventCommentsList(comms);
+    setIsLoadingEventComments(false);
+  };
+
+  const handleDeleteEventComment = async (commentId: string) => {
+    if (!confirm('Hapus komentar ini?')) return;
+    await deleteComment(commentId);
+    setEventCommentsList(prev => prev.filter(c => c.id !== commentId));
+    triggerSuccess('Komentar Berhasil Dihapus.');
+  };
+
   const handleAddEvent = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!evtTitle || !evtLocation || !evtDate || !evtCover) return;
+    if (!evtTitle || !evtLocation || !evtStartDate || !evtCover) return;
 
-    const payload = {
+    const startIso = evtStartTime 
+      ? new Date(`${evtStartDate}T${evtStartTime}:00`).toISOString()
+      : new Date(`${evtStartDate}T00:00:00`).toISOString();
+    const endIso = evtEndTime
+      ? new Date(`${evtStartDate}T${evtEndTime}:00`).toISOString()
+      : undefined;
+
+    const payload: any = {
       title: evtTitle,
       description: evtDesc,
       location: evtLocation,
-      start_date: new Date(evtDate).toISOString(),
+      maps_url: evtMapsUrl || undefined,
+      start_date: startIso,
+      end_date: endIso,
       cover_image: evtCover,
       ticket_link: evtTicket,
       price_info: evtPrice,
-      is_online: evtOnline
+      is_online: evtOnline,
+      gallery_media: evtGalleryMedia
     };
 
     if (editingEventId) {
@@ -665,11 +724,15 @@ export default function AdminPage() {
     setEvtTitle('');
     setEvtDesc('');
     setEvtLocation('');
-    setEvtDate('');
+    setEvtMapsUrl('');
+    setEvtStartDate(new Date().toISOString().split('T')[0]);
+    setEvtStartTime('19:00');
+    setEvtEndTime('22:00');
     setEvtCover('');
     setEvtTicket('');
     setEvtPrice('Free');
     setEvtOnline(false);
+    setEvtGalleryMedia([]);
     refreshData();
   };
 
@@ -678,19 +741,33 @@ export default function AdminPage() {
     setEvtTitle(evt.title);
     setEvtDesc(evt.description || '');
     setEvtLocation(evt.location);
-    
-    let formattedDate = '';
+    setEvtMapsUrl(evt.maps_url || '');
+
     if (evt.start_date) {
       const d = new Date(evt.start_date);
-      const tzOffset = d.getTimezoneOffset() * 60000;
-      const localISOTime = (new Date(d.getTime() - tzOffset)).toISOString().slice(0, 16);
-      formattedDate = localISOTime;
+      setEvtStartDate(d.toISOString().split('T')[0]);
+      const hours = String(d.getHours()).padStart(2, '0');
+      const mins = String(d.getMinutes()).padStart(2, '0');
+      setEvtStartTime(`${hours}:${mins}`);
+    } else {
+      setEvtStartDate(new Date().toISOString().split('T')[0]);
+      setEvtStartTime('19:00');
     }
-    setEvtDate(formattedDate);
+
+    if (evt.end_date) {
+      const d = new Date(evt.end_date);
+      const hours = String(d.getHours()).padStart(2, '0');
+      const mins = String(d.getMinutes()).padStart(2, '0');
+      setEvtEndTime(`${hours}:${mins}`);
+    } else {
+      setEvtEndTime('');
+    }
+
     setEvtCover(evt.cover_image || '');
     setEvtTicket(evt.ticket_link || '');
     setEvtPrice(evt.price_info || 'Free');
     setEvtOnline(evt.is_online || false);
+    setEvtGalleryMedia(evt.gallery_media || []);
   };
 
   const handleCancelEditEvent = () => {
@@ -698,11 +775,15 @@ export default function AdminPage() {
     setEvtTitle('');
     setEvtDesc('');
     setEvtLocation('');
-    setEvtDate('');
+    setEvtMapsUrl('');
+    setEvtStartDate(new Date().toISOString().split('T')[0]);
+    setEvtStartTime('19:00');
+    setEvtEndTime('22:00');
     setEvtCover('');
     setEvtTicket('');
     setEvtPrice('Free');
     setEvtOnline(false);
+    setEvtGalleryMedia([]);
   };
 
   const handleDeleteEvent = async (id: string) => {
@@ -2177,69 +2258,118 @@ export default function AdminPage() {
               <div className="space-y-6">
                 <div>
                   <h1 className="text-2xl font-black uppercase text-white tracking-wider">MANAGE EVENTS & WORKSHOPS</h1>
-                  <p className="text-xs text-muted">Rencanakan agenda gig musik offline atau online masterclass.</p>
+                  <p className="text-xs text-muted">Rencanakan agenda gig musik offline, online masterclass, dan kelola diskusi event.</p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                   {/* Form */}
                   <form onSubmit={handleAddEvent} className="rounded-3xl border border-white/5 bg-[#08080a] p-6 space-y-4">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-white/5 pb-2">{editingEventId ? 'EDIT EVENT' : 'SCHEDULE EVENT'}</h3>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-white/5 pb-2">
+                      {editingEventId ? 'EDIT EVENT' : 'SCHEDULE EVENT'}
+                    </h3>
                     
-                    <div className="space-y-3">
+                    <div className="space-y-4">
+                      {/* Event Title */}
                       <div>
                         <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">Nama Event</label>
                         <input
                           type="text"
                           required
-                          placeholder="e.g. Synth Workshop"
+                          placeholder="e.g. Immortal Showcase: Vol. 2"
                           value={evtTitle}
                           onChange={(e) => setEvtTitle(e.target.value)}
                           className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none focus:border-primary/50"
                         />
                       </div>
+
+                      {/* Event WYSIWYG Description */}
                       <div>
-                        <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">Deskripsi Event</label>
-                        <textarea
-                          placeholder="Workshop synthesizer gratis..."
+                        <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">
+                          Deskripsi Event (WYSIWYG Rich Editor)
+                        </label>
+                        <RichTextEditor
                           value={evtDesc}
-                          onChange={(e) => setEvtDesc(e.target.value)}
-                          rows={2}
-                          className="w-full rounded-xl border border-white/10 bg-black/40 p-4 text-xs text-white outline-none resize-none"
+                          onChange={setEvtDesc}
+                          placeholder="Tuliskan deskripsi lengkap event, lineup penampil, dan susunan rundown..."
+                          minHeight="150px"
                         />
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
+
+                      {/* Split Tanggal & Jam Acara */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
-                          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">Tanggal Mulai</label>
+                          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">
+                            Tanggal Acara <span className="text-primary">*</span>
+                          </label>
                           <input
-                            type="datetime-local"
+                            type="date"
                             required
-                            value={evtDate}
-                            onChange={(e) => setEvtDate(e.target.value)}
-                            className="w-full rounded-xl border border-white/10 bg-black/40 py-2 px-3 text-xs text-white outline-none focus:border-primary/50"
+                            value={evtStartDate}
+                            onChange={(e) => setEvtStartDate(e.target.value)}
+                            className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-3 text-xs text-white outline-none focus:border-primary/50"
                           />
                         </div>
+                        <div>
+                          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">
+                            Jam Mulai <span className="text-primary">*</span>
+                          </label>
+                          <input
+                            type="time"
+                            required
+                            value={evtStartTime}
+                            onChange={(e) => setEvtStartTime(e.target.value)}
+                            className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-3 text-xs text-white outline-none focus:border-primary/50"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">
+                            Jam Selesai (Opsional)
+                          </label>
+                          <input
+                            type="time"
+                            value={evtEndTime}
+                            onChange={(e) => setEvtEndTime(e.target.value)}
+                            className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-3 text-xs text-white outline-none focus:border-primary/50"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Lokasi & Google Maps Link */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">Lokasi / Venue</label>
                           <input
                             type="text"
                             required
-                            placeholder="Senayan, Jakarta"
+                            placeholder="Studio Room A, Immortal HQ, Senayan"
                             value={evtLocation}
                             onChange={(e) => setEvtLocation(e.target.value)}
-                            className="w-full rounded-xl border border-white/10 bg-black/40 py-2 px-3 text-xs text-white outline-none"
+                            className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none focus:border-primary/50"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">Link Google Maps (Venue)</label>
+                          <input
+                            type="url"
+                            placeholder="https://maps.google.com/..."
+                            value={evtMapsUrl}
+                            onChange={(e) => setEvtMapsUrl(e.target.value)}
+                            className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none focus:border-primary/50"
                           />
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
+
+                      {/* Harga & Online Checkbox */}
+                      <div className="grid grid-cols-2 gap-3 items-center">
                         <div>
                           <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">Harga / Biaya Tiket</label>
                           <input
                             type="text"
                             required
-                            placeholder="Free atau Rp 100.000"
+                            placeholder="Free atau Rp 150.000"
                             value={evtPrice}
                             onChange={(e) => setEvtPrice(e.target.value)}
-                            className="w-full rounded-xl border border-white/10 bg-black/40 py-2 px-3 text-xs text-white outline-none"
+                            className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none"
                           />
                         </div>
                         <div className="flex items-center gap-2 pt-4">
@@ -2250,33 +2380,119 @@ export default function AdminPage() {
                             onChange={(e) => setEvtOnline(e.target.checked)}
                             className="accent-primary"
                           />
-                          <label htmlFor="online" className="text-[10px] font-bold uppercase tracking-wider text-muted cursor-pointer select-none">Online Event</label>
+                          <label htmlFor="online" className="text-[10px] font-bold uppercase tracking-wider text-muted cursor-pointer select-none">
+                            Online Broadcast / Webinar
+                          </label>
                         </div>
                       </div>
-                      <div>
-                        <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">Cover Banner Image URL</label>
-                        <input
-                          type="url"
-                          required
-                          placeholder="https://images.unsplash.com/..."
-                          value={evtCover}
-                          onChange={(e) => setEvtCover(e.target.value)}
-                          className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none"
-                        />
+
+                      {/* Cover Banner Image with File Upload */}
+                      <div className="space-y-2">
+                        <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted">
+                          Cover Banner Image (Upload PC atau URL)
+                        </label>
+                        {evtCover && (
+                          <div className="relative aspect-[21/9] max-h-36 w-full overflow-hidden rounded-xl border border-white/10 bg-black/40">
+                            <img src={evtCover} alt="Cover Preview" className="h-full w-full object-cover" />
+                          </div>
+                        )}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <input
+                              type="file"
+                              id="evt-cover-file"
+                              accept="image/*"
+                              onChange={handleEventCoverFile}
+                              className="hidden"
+                            />
+                            <label
+                              htmlFor="evt-cover-file"
+                              className="flex cursor-pointer w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 bg-white/5 py-2.5 px-3 text-xs font-bold text-neutral-300 hover:border-primary/50 hover:text-white transition"
+                            >
+                              <Upload size={14} className="text-primary" />
+                              <span>Pilih File Gambar dari PC</span>
+                            </label>
+                          </div>
+                          <div>
+                            <input
+                              type="url"
+                              required
+                              placeholder="Atau URL gambar banner..."
+                              value={evtCover}
+                              onChange={(e) => setEvtCover(e.target.value)}
+                              className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none focus:border-primary/50"
+                            />
+                          </div>
+                        </div>
                       </div>
+
+                      {/* Ticket Link */}
                       <div>
                         <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">Link Tiket Partner (Jika Berbayar)</label>
                         <input
                           type="url"
-                          placeholder="https://loket.com/..."
+                          placeholder="https://loket.com/... atau tautan pembelian tiket"
                           value={evtTicket}
                           onChange={(e) => setEvtTicket(e.target.value)}
                           className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 px-4 text-xs text-white outline-none"
                         />
                       </div>
+
+                      {/* Gallery Media Sub-section */}
+                      <div className="rounded-2xl border border-white/5 bg-black/30 p-4 space-y-3">
+                        <div className="flex justify-between items-center">
+                          <label className="text-[10px] font-semibold uppercase tracking-wider text-primary">
+                            Media Pendukung (Video YouTube / Foto Dokumentasi)
+                          </label>
+                          <span className="text-[9px] text-neutral-500">{evtGalleryMedia.length} media ditambahkan</span>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <select
+                            value={mediaInputType}
+                            onChange={(e) => setMediaInputType(e.target.value as 'video' | 'image')}
+                            className="rounded-xl border border-white/10 bg-black/60 px-3 py-2 text-xs text-white outline-none"
+                          >
+                            <option value="video">Video (YouTube)</option>
+                            <option value="image">Gambar (Foto)</option>
+                          </select>
+                          <input
+                            type="url"
+                            placeholder={mediaInputType === 'video' ? 'https://www.youtube.com/watch?v=...' : 'https://images.unsplash.com/...'}
+                            value={mediaInputUrl}
+                            onChange={(e) => setMediaInputUrl(e.target.value)}
+                            className="flex-1 rounded-xl border border-white/10 bg-black/60 px-3 py-2 text-xs text-white outline-none focus:border-primary/50"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleAddMediaItem}
+                            className="rounded-xl bg-primary/20 hover:bg-primary/30 border border-primary/30 px-4 py-2 text-xs font-bold text-primary hover:text-white transition"
+                          >
+                            + Tambah
+                          </button>
+                        </div>
+
+                        {evtGalleryMedia.length > 0 && (
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            {evtGalleryMedia.map((m, idx) => (
+                              <div key={idx} className="flex items-center gap-2 rounded-lg bg-black/60 border border-white/10 px-2.5 py-1 text-[11px] text-neutral-300">
+                                <span className="text-[9px] font-black uppercase text-primary px-1 bg-primary/10 rounded">{m.type}</span>
+                                <span className="truncate max-w-[140px]">{m.url}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveMediaItem(idx)}
+                                  className="text-neutral-500 hover:text-rose-400"
+                                >
+                                  <Trash2 size={10} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
 
-                    <div className="flex gap-2 w-full">
+                    <div className="flex gap-2 w-full pt-2">
                       <button
                         type="submit"
                         className="flex-1 flex cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-primary py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-primary-hover transition"
@@ -2298,18 +2514,36 @@ export default function AdminPage() {
 
                   {/* List */}
                   <div className="rounded-3xl border border-white/5 bg-[#08080a] p-6 space-y-4">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-white/5 pb-2 font-black">EVENTS LIST ({events.length})</h3>
-                    <div className="max-h-[420px] overflow-y-auto space-y-3 pr-1">
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-white/5 pb-2 font-black">
+                      EVENTS LIST ({events.length})
+                    </h3>
+                    <div className="max-h-[550px] overflow-y-auto space-y-3 pr-1">
                       {events.map(e => (
                         <div key={e.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/5 bg-black/40 p-3">
                           <div className="flex items-center gap-2 min-w-0">
-                            <img src={e.cover_image} className="h-10 w-14 rounded object-cover" />
+                            <img src={e.cover_image} className="h-10 w-14 rounded object-cover shrink-0" />
                             <div className="min-w-0">
                               <h4 className="text-xs font-bold text-white truncate">{e.title}</h4>
-                              <p className="text-[9px] text-muted">{formatShortDate(e.start_date)} • {e.location}</p>
+                              <p className="text-[9px] text-muted truncate">
+                                {formatShortDate(e.start_date)} • {e.location}
+                              </p>
+                              {e.maps_url && (
+                                <span className="inline-block text-[8px] text-primary font-bold">Google Maps Linked</span>
+                              )}
                             </div>
                           </div>
-                          <div className="flex gap-1.5 shrink-0">
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {/* Kelola Komentar Button */}
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEventComments(e)}
+                              title="Kelola Komentar Event"
+                              className="flex items-center gap-1 rounded-lg bg-white/5 hover:bg-white/10 px-2 py-1.5 text-[10px] font-bold text-neutral-300 hover:text-white transition"
+                            >
+                              <MessageSquare size={12} className="text-primary" />
+                              <span className="hidden sm:inline">Komentar</span>
+                            </button>
+
                             <button
                               type="button"
                               onClick={() => handleStartEditEvent(e)}
@@ -2329,6 +2563,86 @@ export default function AdminPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Event Comments Management Modal */}
+                <AnimatePresence>
+                  {selectedEventForComments && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setSelectedEventForComments(null)}
+                        className="absolute inset-0 bg-black/90 backdrop-blur-md"
+                      />
+                      <motion.div
+                        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                        className="relative w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col rounded-3xl border border-primary/20 bg-[#0a0a0c] p-6 shadow-2xl glass-red"
+                      >
+                        <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
+                          <div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Moderasi Diskusi Event</span>
+                            <h3 className="text-base font-bold text-white truncate max-w-md">
+                              {selectedEventForComments.title}
+                            </h3>
+                          </div>
+                          <button
+                            onClick={() => setSelectedEventForComments(null)}
+                            className="rounded-lg bg-white/5 hover:bg-white/10 p-2 text-neutral-400 hover:text-white"
+                          >
+                            Tutup
+                          </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+                          {isLoadingEventComments ? (
+                            <div className="py-12 text-center text-xs text-muted">Memuat komentar...</div>
+                          ) : eventCommentsList.length > 0 ? (
+                            eventCommentsList.map(comm => (
+                              <div key={comm.id} className="flex gap-3 items-start rounded-xl border border-white/5 bg-black/50 p-3.5">
+                                <img
+                                  src={comm.avatar_url}
+                                  alt={comm.username}
+                                  className="h-8 w-8 rounded-full object-cover border border-white/10 shrink-0"
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs font-bold text-white">@{comm.username}</span>
+                                    <span className="text-[9px] text-muted">
+                                      {new Date(comm.created_at).toLocaleDateString('id-ID', {
+                                        day: 'numeric',
+                                        month: 'short',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}
+                                    </span>
+                                  </div>
+                                  <p className="text-neutral-300 text-xs mt-1 whitespace-pre-line leading-relaxed">
+                                    {comm.content}
+                                  </p>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteEventComment(comm.id)}
+                                  className="rounded-lg bg-rose-950/20 p-2 text-rose-400 hover:bg-rose-950/40 shrink-0"
+                                  title="Hapus Komentar"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="py-12 text-center text-xs text-neutral-600">
+                              Belum ada komentar untuk event ini.
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    </div>
+                  )}
+                </AnimatePresence>
               </div>
             )}
 

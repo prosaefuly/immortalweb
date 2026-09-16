@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { getEvents, EventItem } from '@/lib/db';
 import { Calendar, MapPin, Ticket, Award, CheckCircle2, ChevronRight, X, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -162,11 +163,11 @@ export default function EventsPage() {
                 >
                   
                   {/* Left: Banner Image */}
-                  <div className="relative aspect-video w-full overflow-hidden md:w-80 md:aspect-auto md:shrink-0">
+                  <Link href={`/events/${event.id}`} className="relative aspect-video w-full overflow-hidden md:w-80 md:aspect-auto md:shrink-0 block cursor-pointer">
                     <img
                       src={event.cover_image}
                       alt={event.title}
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-102"
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-transparent hidden md:block" />
                     
@@ -176,7 +177,7 @@ export default function EventsPage() {
                     }`}>
                       {status}
                     </span>
-                  </div>
+                  </Link>
 
                   {/* Right: Info Contents */}
                   <div className="flex flex-1 flex-col justify-between p-6 md:p-8 space-y-6">
@@ -194,11 +195,13 @@ export default function EventsPage() {
                       </div>
 
                       <h3 className="text-xl font-bold tracking-tight text-white group-hover:text-primary transition leading-snug md:text-2xl">
-                        {event.title}
+                        <Link href={`/events/${event.id}`} className="hover:text-primary transition">
+                          {event.title}
+                        </Link>
                       </h3>
                       
-                      <p className="text-neutral-400 text-sm leading-relaxed">
-                        {event.description}
+                      <p className="text-neutral-400 text-sm leading-relaxed line-clamp-2">
+                        {event.description?.replace(/<[^>]+>/g, ' ') || ''}
                       </p>
 
                       <div className="flex items-center gap-1.5 text-xs text-muted pt-2">
@@ -208,15 +211,23 @@ export default function EventsPage() {
                     </div>
 
                     {/* Booking Action */}
-                    <div className="border-t border-white/5 pt-4">
+                    <div className="border-t border-white/5 pt-4 flex flex-wrap items-center gap-3">
+                      <Link
+                        href={`/events/${event.id}`}
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-white hover:bg-white/10 hover:border-primary/40 transition"
+                      >
+                        <span>Lihat Detail Event</span>
+                        <ChevronRight size={14} />
+                      </Link>
+
                       {isPast ? (
-                        <span className="inline-flex rounded-lg bg-white/5 px-4 py-2 text-xs font-bold uppercase tracking-wider text-neutral-500">
-                          Event Has Ended
+                        <span className="inline-flex rounded-lg bg-white/5 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-neutral-500">
+                          Event Selesai
                         </span>
                       ) : isFree ? (
                         <button
                           onClick={() => setSelectedEvent(event)}
-                          className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary/10 border border-primary/20 py-2.5 px-5 text-xs font-bold uppercase tracking-widest text-primary transition hover:bg-primary hover:text-white"
+                          className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary/10 border border-primary/20 py-2.5 px-4 text-xs font-bold uppercase tracking-widest text-primary transition hover:bg-primary hover:text-white"
                         >
                           <span>Register RSVP Free</span>
                           <ChevronRight size={14} />
@@ -226,10 +237,10 @@ export default function EventsPage() {
                           href={event.ticket_link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 rounded-xl bg-primary py-2.5 px-5 text-xs font-bold uppercase tracking-widest text-white transition hover:bg-primary-hover shadow-md shadow-primary/15"
+                          className="inline-flex items-center gap-2 rounded-xl bg-primary py-2.5 px-4 text-xs font-bold uppercase tracking-widest text-white transition hover:bg-primary-hover shadow-md shadow-primary/15"
                         >
                           <Ticket size={14} />
-                          <span>Buy Ticket Partner</span>
+                          <span>Beli Tiket</span>
                           <ChevronRight size={14} />
                         </a>
                       )}

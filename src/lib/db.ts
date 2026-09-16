@@ -127,12 +127,14 @@ export interface EventItem {
   title: string;
   description: string;
   location: string;
+  maps_url?: string;
   start_date: string;
   end_date?: string;
   cover_image: string;
   ticket_link?: string;
   price_info: string;
   is_online: boolean;
+  gallery_media?: Array<{ type: 'image' | 'video'; url: string }>;
 }
 
 export interface Inquiry {
@@ -153,6 +155,7 @@ export interface Comment {
   avatar_url: string;
   episode_id?: string;
   post_id?: string;
+  event_id?: string;
   content: string;
   created_at: string;
 }
@@ -706,6 +709,15 @@ export const getEvents = async (): Promise<EventItem[]> => {
   return getLocalStorage('immortal_events', mockEvents);
 };
 
+export const getEventById = async (id: string): Promise<EventItem | undefined> => {
+  if (isSupabaseConfigured && supabase) {
+    const { data, error } = await supabase.from('events').select('*').eq('id', id).maybeSingle();
+    if (!error && data) return data as unknown as EventItem;
+  }
+  const events = getLocalStorage('immortal_events', mockEvents);
+  return events.find((e: EventItem) => e.id === id);
+};
+
 // --- B2B INQUIRIES, CONTENT & PARTNER BRANDS ---
 
 export const defaultPartnerBrands: PartnerBrand[] = [
@@ -989,11 +1001,12 @@ export const subscribeNewsletter = async (email: string): Promise<boolean> => {
 
 // --- COMMENTS ---
 
-export const getComments = async (target: { episodeId?: string; postId?: string }): Promise<Comment[]> => {
+export const getComments = async (target: { episodeId?: string; postId?: string; eventId?: string }): Promise<Comment[]> => {
   if (isSupabaseConfigured && supabase) {
     let query = supabase.from('comments').select('*, profiles(username, avatar_url)');
     if (target.episodeId) query = query.eq('episode_id', target.episodeId);
     if (target.postId) query = query.eq('post_id', target.postId);
+    if (target.eventId) query = query.eq('event_id', target.eventId);
     const { data, error } = await query.order('created_at', { ascending: true });
     
     if (!error && data) {
@@ -1004,6 +1017,7 @@ export const getComments = async (target: { episodeId?: string; postId?: string 
         avatar_url: c.profiles?.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
         episode_id: c.episode_id,
         post_id: c.post_id,
+        event_id: c.event_id,
         content: c.content,
         created_at: c.created_at
       }));
@@ -1029,6 +1043,15 @@ export const getComments = async (target: { episodeId?: string; postId?: string 
       episode_id: 'ep-4',
       content: 'Awesome explanation on the Eurorack modules. That Mutable Instruments Clouds demo was neat!',
       created_at: '2026-06-11T16:05:00Z'
+    },
+    {
+      id: 'comm-3',
+      user_id: 'user-mock-1',
+      username: 'vinyl_junkie',
+      avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+      event_id: 'event-1',
+      content: 'Can not wait for this showcase! Looking forward to the analog synth jam.',
+      created_at: '2026-07-10T11:20:00Z'
     }
   ];
   const allComments = getLocalStorage('immortal_comments', defaultComments);
@@ -1037,6 +1060,9 @@ export const getComments = async (target: { episodeId?: string; postId?: string 
   }
   if (target.postId) {
     return allComments.filter((c: Comment) => c.post_id === target.postId);
+  }
+  if (target.eventId) {
+    return allComments.filter((c: Comment) => c.event_id === target.eventId);
   }
   return [];
 };
@@ -1047,16 +1073,20 @@ export const addComment = async (commentData: {
   avatarUrl: string;
   episodeId?: string;
   postId?: string;
+  eventId?: string;
   content: string;
 }): Promise<Comment | null> => {
   if (isSupabaseConfigured && supabase) {
     const validUserId = isValidUUID(commentData.userId) ? commentData.userId : MASTER_ADMIN_ID;
-    const { data, error } = await supabase.from('comments').insert([{
+    const insertPayload: any = {
       user_id: validUserId,
-      episode_id: isValidUUID(commentData.episodeId) ? commentData.episodeId : null,
-      post_id: isValidUUID(commentData.postId) ? commentData.postId : null,
       content: commentData.content
-    }]).select('*, profiles(username, avatar_url)').single();
+    };
+    if (isValidUUID(commentData.episodeId)) insertPayload.episode_id = commentData.episodeId;
+    if (isValidUUID(commentData.postId)) insertPayload.post_id = commentData.postId;
+    if (isValidUUID(commentData.eventId)) insertPayload.event_id = commentData.eventId;
+
+    const { data, error } = await supabase.from('comments').insert([insertPayload]).select('*, profiles(username, avatar_url)').single();
     
     if (!error && data) {
       return {
@@ -1066,14 +1096,14 @@ export const addComment = async (commentData: {
         avatar_url: data.profiles?.avatar_url || commentData.avatarUrl,
         episode_id: data.episode_id,
         post_id: data.post_id,
+        event_id: data.event_id,
         content: data.content,
         created_at: data.created_at
       };
     }
   }
   
-  const defaultComments: Comment[] = [];
-  const allComments = getLocalStorage('immortal_comments', defaultComments);
+  const allComments = getLocalStorage('immortal_comments', []);
   const newComment: Comment = {
     id: `comm-${Date.now()}`,
     user_id: commentData.userId,
@@ -1081,6 +1111,7 @@ export const addComment = async (commentData: {
     avatar_url: commentData.avatarUrl,
     episode_id: commentData.episodeId,
     post_id: commentData.postId,
+    event_id: commentData.eventId,
     content: commentData.content,
     created_at: new Date().toISOString()
   };
@@ -1088,6 +1119,18 @@ export const addComment = async (commentData: {
   const updatedComments = [...allComments, newComment];
   setLocalStorage('immortal_comments', updatedComments);
   return newComment;
+};
+
+export const deleteComment = async (id: string): Promise<boolean> => {
+  if (isSupabaseConfigured && supabase && isValidUUID(id)) {
+    const { error } = await supabase.from('comments').delete().eq('id', id);
+    if (!error) return true;
+    console.error('Error deleting comment in Supabase:', error);
+  }
+  const allComments = getLocalStorage('immortal_comments', []);
+  const filtered = allComments.filter((c: Comment) => c.id !== id);
+  setLocalStorage('immortal_comments', filtered);
+  return true;
 };
 
 // --- PRODUCTS APIs ---
